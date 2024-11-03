@@ -11,15 +11,15 @@ require_once("conexion.php");
 $conn = conectarDB();
 
 // Obtener el ID del requerimiento a actualizar
-if (!isset($_GET['Idrequerimiento'])) {
+if (!isset($_GET['id'])) { // Cambiar 'Idrequerimiento' a 'id'
     echo "ID de requerimiento no especificado.";
     exit();
 }
 
-$idRequerimiento = $_GET['Idrequerimiento'];
+$idRequerimiento = $_GET['id']; // Cambiar 'Idrequerimiento' a 'id'
 
 // Obtener los datos actuales del requerimiento
-$sql = "SELECT * FROM requerimientos WHERE Idrequerimiento = ?";
+$sql = "SELECT r.*, p.Descripcion AS NombreProyecto FROM requerimientos r LEFT JOIN proyecto_auditoria p ON r.Idproyecto = p.Idproyecto WHERE Idrequerimiento = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $idRequerimiento);
 $stmt->execute();
@@ -42,27 +42,10 @@ $resultProyectos = $conn->query($sqlProyectos);
 
 // Función para registrar auditoría de requerimientos actualizados
 function registrarAuditoriaRequerimientoActualizado($conn, $usuario_id, $accion, $detalles, $idRequerimiento) {
-    try {
-        // Preparar la consulta para insertar auditoría de requerimiento actualizado
-        $sql_auditoria = "INSERT INTO auditoria_requerimientos (IDusuario, Accion, Detalles, FechaHora, IdRequerimiento) VALUES (?, ?, ?, NOW(), ?)";
-        $stmt_auditoria = $conn->prepare($sql_auditoria);
-        
-        if (!$stmt_auditoria) {
-            throw new Exception("Error al preparar la consulta de auditoría de requerimiento actualizado: " . $conn->error);
-        }
-        
-        $stmt_auditoria->bind_param("isss", $usuario_id, $accion, $detalles, $idRequerimiento);
-
-        // Ejecutar la consulta preparada
-        if ($stmt_auditoria->execute()) {
-            return true;
-        } else {
-            throw new Exception("Error al ejecutar la consulta de auditoría de requerimiento actualizado: " . $stmt_auditoria->error);
-        }
-    } catch (Exception $e) {
-        echo "Error al registrar auditoría de requerimiento actualizado: " . $e->getMessage();
-        return false;
-    }
+    $sql_auditoria = "INSERT INTO auditoria_requerimientos (IDusuario, Accion, Detalles, FechaHora, IdRequerimiento) VALUES (?, ?, ?, NOW(), ?)";
+    $stmt_auditoria = $conn->prepare($sql_auditoria);
+    $stmt_auditoria->bind_param("issi", $usuario_id, $accion, $detalles, $idRequerimiento);
+    $stmt_auditoria->execute();
 }
 
 // Procesar el formulario cuando se envíe
@@ -73,14 +56,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $fecha_vencimiento = $_POST['fecha_vencimiento'];
     $proyecto = $_POST['proyecto'];
 
-    // Validar datos del formulario (ejemplo básico)
+    // Validar datos del formulario
     if (empty($titulo) || empty($descripcion) || empty($remitente) || empty($fecha_vencimiento) || empty($proyecto)) {
         echo "Por favor complete todos los campos.";
         exit();
     }
 
     // Detalles antes de la actualización
-    $detallesAntes = "Título: " . $row['Titulo'] . ", Descripción: " . $row['Descripcion'] . ", Remitente: " . $row['Remitente'] . ", Fecha de Vencimiento: " . $row['Fecha_vencimiento'] . ", Proyecto: " . $row['Idproyecto'];
+    $detallesAntes = "Título: " . $row['Titulo'] . ", Descripción: " . $row['Descripcion'] . ", Remitente: " . $row['Remitente'] . ", Fecha de Vencimiento: " . $row['Fecha_vencimiento'] . ", Proyecto: " . $row['NombreProyecto'];
 
     // Actualizar el requerimiento en la base de datos
     $sqlUpdate = "UPDATE requerimientos SET 
@@ -96,7 +79,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($stmtUpdate->execute()) {
         // Detalles después de la actualización
-        $detallesDespues = "Título: $titulo, Descripción: $descripcion, Remitente: $remitente, Fecha de Vencimiento: $fecha_vencimiento, Proyecto: $proyecto";
+        $detallesDespues = "Título: $titulo, Descripción: $descripcion, Remitente: $remitente, Fecha de Vencimiento: $fecha_vencimiento, Proyecto: " . obtenerNombreProyecto($conn, $proyecto);
 
         // Registrar acción de auditoría de requerimiento actualizado
         $accion = "Actualizar requerimiento";
@@ -117,6 +100,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 // Cerrar conexiones y liberar recursos
 $stmt->close();
 $conn->close();
+
+// Función para obtener el nombre del proyecto
+function obtenerNombreProyecto($conn, $idProyecto) {
+    $sql = "SELECT Descripcion FROM proyecto_auditoria WHERE Idproyecto = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $idProyecto);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows > 0) {
+        $proyecto = $result->fetch_assoc();
+        return $proyecto['Descripcion'];
+    } else {
+        return "Proyecto no encontrado";
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -166,7 +164,7 @@ $conn->close();
 <body>
     <div class="container">
         <h2>Actualizar Requerimiento</h2>
-        <form method="post" action="update_requerimiento.php?Idrequerimiento=<?php echo htmlspecialchars($idRequerimiento); ?>">
+        <form method="post" action="update_requerimiento.php?id=<?php echo htmlspecialchars($idRequerimiento); ?>">
             <div class="form-group">
                 <label for="titulo">Título del Requerimiento:</label>
                 <input type="text" class="form-control" id="titulo" name="titulo" value="<?php echo htmlspecialchars($row['Titulo']); ?>" required>

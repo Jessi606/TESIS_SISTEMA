@@ -29,11 +29,42 @@ $idUsuario = $_SESSION['usuario_id'];
 // Manejar la acción de Aceptar
 if (isset($_GET['action']) && isset($_GET['id']) && $_GET['action'] == 'aceptar') {
     $id = $_GET['id'];
+    
+    // Obtener el título del requerimiento
+    $stmtNombre = $con->prepare("SELECT Titulo FROM requerimientos WHERE Idrequerimiento = ?");
+    $stmtNombre->bind_param('i', $id);
+    $stmtNombre->execute();
+    $resultNombre = $stmtNombre->get_result();
+    $tituloRequerimiento = $resultNombre->fetch_assoc()['Titulo'];
+
     $sql = "UPDATE requerimientos SET Estado_requerimiento = 'Aceptado' WHERE Idrequerimiento = ?";
     $stmt = $con->prepare($sql);
     $stmt->bind_param('i', $id);
     if ($stmt->execute()) {
-        registrarAuditoria($con, $id, 'Aceptar', 'El requerimiento fue aceptado.', $idUsuario);
+        registrarAuditoria($con, $id, 'Aceptar', "El requerimiento '$tituloRequerimiento' fue aceptado.", $idUsuario);
+    }
+    // Redireccionar a esta misma página después de actualizar el estado
+    header("Location: {$_SERVER['PHP_SELF']}");
+    exit;
+}
+
+// Anular requerimiento
+if (isset($_GET['anular'])) {
+    $id = $_GET['anular'];
+    $estadoAnulado = "Anulado";
+
+    // Obtener el título del requerimiento antes de anular
+    $stmtNombre = $con->prepare("SELECT Titulo FROM requerimientos WHERE Idrequerimiento = ?");
+    $stmtNombre->bind_param('i', $id);
+    $stmtNombre->execute();
+    $resultNombre = $stmtNombre->get_result();
+    $tituloRequerimiento = $resultNombre->fetch_assoc()['Titulo'];
+
+    // Actualizar el estado del requerimiento a "Anulado"
+    $stmt = $con->prepare("UPDATE requerimientos SET Estado_requerimiento = ? WHERE Idrequerimiento = ?");
+    $stmt->bind_param('si', $estadoAnulado, $id);
+    if ($stmt->execute()) {
+        registrarAuditoria($con, $id, 'Anular', "El requerimiento '$tituloRequerimiento' fue anulado.", $idUsuario);
     }
     // Redireccionar a esta misma página después de actualizar el estado
     header("Location: {$_SERVER['PHP_SELF']}");
@@ -44,11 +75,19 @@ if (isset($_GET['action']) && isset($_GET['id']) && $_GET['action'] == 'aceptar'
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['comentario']) && isset($_POST['id'])) {
     $id = $_POST['id'];
     $comentario = $_POST['comentario'];
+
+    // Obtener el nombre del requerimiento antes de actualizar el estado
+    $stmtNombre = $con->prepare("SELECT Titulo FROM requerimientos WHERE Idrequerimiento = ?");
+    $stmtNombre->bind_param('i', $id);
+    $stmtNombre->execute();
+    $resultNombre = $stmtNombre->get_result();
+    $tituloRequerimiento = $resultNombre->fetch_assoc()['Titulo'];
+
     $sql = "UPDATE requerimientos SET Estado_requerimiento = 'Devuelto', Comentario = ? WHERE Idrequerimiento = ?";
     $stmt = $con->prepare($sql);
     $stmt->bind_param('si', $comentario, $id);
     if ($stmt->execute()) {
-        registrarAuditoria($con, $id, 'Regresar', "El requerimiento fue devuelto con el comentario: $comentario", $idUsuario);
+        registrarAuditoria($con, $id, 'Regresar', "El requerimiento '$tituloRequerimiento' fue devuelto con el comentario: $comentario", $idUsuario);
     }
     // Redireccionar a esta misma página después de actualizar el estado
     header("Location: {$_SERVER['PHP_SELF']}");
@@ -56,10 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['comentario']) && isset
 }
 
 // Consulta SQL para seleccionar todos los requerimientos con información del proyecto
-$sql = "SELECT r.*, p.Descripcion AS NombreProyecto
-        FROM requerimientos r
-        LEFT JOIN proyecto_auditoria p ON r.Idproyecto = p.Idproyecto";
-
+$sql = "SELECT r.*, p.Descripcion AS NombreProyecto FROM requerimientos r LEFT JOIN proyecto_auditoria p ON r.Idproyecto = p.Idproyecto";
 $query = mysqli_query($con, $sql);
 ?>
 <!DOCTYPE html>
@@ -68,82 +104,27 @@ $query = mysqli_query($con, $sql);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Requerimientos de Auditoría</title>
-    <!-- Integra Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome Cdn Link -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <!-- Estilos personalizados -->
     <style>
-        body {
-            background-color: #a6bbd7;
-            color: #333;
-        }
-        .container {
-            max-width: 2100px;
-            margin: auto;
-            border-radius: 10px; /* Borde redondeado */
-            margin-top: 50px; /* Espaciado desde arriba */
-            background-color: #fff; /* Fondo blanco */
-            padding: 20px; /* Espaciado interno */
-            box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1); /* Sombra */
-        }
-        h1, h2 {
-            color: #000;
-        }
-        .btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
-        }
-        .btn-primary:hover {
-            background-color: #0056b3;
-            border-color: #0056b3;
-        }
-        .btn-success {
-            background-color: #28a745;
-            border-color: #28a745;
-        }
-        .btn-success:hover {
-            background-color: #218838;
-            border-color: #1e7e34;
-        }
-        .btn-danger {
-            background-color: #dc3545;
-            border-color: #dc3545;
-        }
-        .btn-danger:hover {
-            background-color: #c82333;
-            border-color: #bd2130;
-        }
-        .btn-warning {
-            background-color: #ffc107;
-            border-color: #ffc107;
-        }
-        .btn-warning:hover {
-            background-color: #e0a800;
-            border-color: #d39e00;
-        }
-        .btn-secondary {
-            background-color: #6c757d;
-            border-color: #6c757d;
-        }
-        .btn-secondary:hover {
-            background-color: #5a6268;
-            border-color: #545b62;
-        }
-        .table th {
-            background-color: #343a40;
-            color: #fff;
-        }
-        .table td {
-            background-color: #f8f9fa;
-        }
-        .button-container {
-            display: flex;
-            gap: 10px; /* Espaciado entre los botones */
-        }
-        .button-container a {
-            flex: 1; /* Distribuye el espacio disponible entre los botones */
-        }
+        body { background-color: #a6bbd7; color: #333; }
+        .container { max-width: 2100px; margin: auto; border-radius: 10px; margin-top: 50px; background-color: #fff; padding: 20px; box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1); }
+        h1, h2 { color: #000; }
+        .btn { padding: 0.25rem 0.5rem; font-size: 0.85rem; }
+        .btn-primary { background-color: #007bff; border-color: #007bff; }
+        .btn-primary:hover { background-color: #0056b3; border-color: #0056b3; }
+        .btn-success { background-color: #28a745; border-color: #28a745; }
+        .btn-success:hover { background-color: #218838; border-color: #1e7e34; }
+        .btn-danger { background-color: #dc3545; border-color: #dc3545; }
+        .btn-danger:hover { background-color: #c82333; border-color: #bd2130; }
+        .btn-warning { background-color: #ffc107; border-color: #ffc107; }
+        .btn-warning:hover { background-color: #e0a800; border-color: #d39e00; }
+        .btn-secondary { background-color: #6c757d; border-color: #6c757d; }
+        .btn-secondary:hover { background-color: #5a6268; border-color: #545b62; }
+        .table th { background-color: #343a40; color: #fff; }
+        .table td { background-color: #f8f9fa; }
+        .button-container { display: flex; gap: 10px; }
+        .button-container a { flex: 1; }
     </style>
     <script>
         function confirmarEliminacion() {
@@ -185,8 +166,8 @@ $query = mysqli_query($con, $sql);
                         <th>Remitente</th>
                         <th>Comentario</th>
                         <th>Acciones</th>
-                        <th>Evidencia</th> <!-- Columna de Evidencia agregada -->
-                        <th>Nombre del Proyecto</th> <!-- Nueva columna para el nombre del proyecto -->
+                        <th>Evidencia</th>
+                        <th>Nombre del Proyecto</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -215,6 +196,9 @@ $query = mysqli_query($con, $sql);
                                         case 'Aceptado':
                                             $badge_class = 'badge-success';
                                             break;
+                                        case 'Anulado':
+                                            $badge_class = 'badge-secondary';
+                                            break;
                                         default:
                                             $badge_class = 'badge-secondary';
                                     }
@@ -225,49 +209,44 @@ $query = mysqli_query($con, $sql);
                             <td><?= $row['Comentario'] ?></td>
                             <td>
                                 <div class="button-container">
-                                    <!-- Botón de Modificar -->
-                                    <a href="update_requerimiento.php?id=<?= $row['Idrequerimiento'] ?>" class="btn btn-warning"><i class="fas fa-edit"></i> Modificar</a>
-
-                                    <!-- Botón de Eliminar -->
-                                    <a href="eliminar_requerimiento.php?id=<?= $row['Idrequerimiento'] ?>" class="btn btn-danger" onclick="return confirmarEliminacion();"><i class="fas fa-trash"></i> Eliminar</a>
-
-                                    <!-- Botón de Aceptar -->
-                                    <a href="?action=aceptar&id=<?= $row['Idrequerimiento'] ?>" class="btn btn-success"><i class="fas fa-check"></i> Aceptar</a>
-
-                                    <!-- Botón de Regresar -->
-                                    <button type="button" class="btn btn-primary" onclick="solicitarComentario(<?= $row['Idrequerimiento'] ?>)"><i class="fas fa-undo"></i> Regresar</button>
+                                    <?php if ($estado === 'Aceptado'): ?>
+                                        <span class="text-success">Requerimiento Aceptado - <?= $row['Titulo'] ?></span>
+                                    <?php elseif ($estado === 'Anulado'): ?>
+                                        <button class="btn btn-warning" disabled><i class="fas fa-edit"></i> Modificar</button>
+                                        <button class="btn btn-danger" disabled><i class="fas fa-ban"></i> Anular</button>
+                                        <button class="btn btn-success" disabled><i class="fas fa-check"></i> Aceptar</button>
+                                        <button class="btn btn-primary" disabled><i class="fas fa-undo"></i> Regresar</button>
+                                    <?php else: ?>
+                                        <a href="update_requerimiento.php?id=<?= $row['Idrequerimiento'] ?>" class="btn btn-warning"><i class="fas fa-edit"></i> Modificar</a>
+                                        <a href="?anular=<?= $row['Idrequerimiento'] ?>" class="btn btn-danger" onclick="return confirmarEliminacion();"><i class="fas fa-ban"></i> Anular</a>
+                                        <a href="?action=aceptar&id=<?= $row['Idrequerimiento'] ?>" class="btn btn-success"><i class="fas fa-check"></i> Aceptar</a>
+                                        <button type="button" class="btn btn-primary" onclick="solicitarComentario(<?= $row['Idrequerimiento'] ?>)"><i class="fas fa-undo"></i> Regresar</button>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                             <td>
-                                    <?php 
-                                        // Obtener el nombre del archivo de evidencia
-                                        $nombreArchivo = $row['Evidencia'];
-                                        
-                                        // Ruta completa al archivo de evidencia
-                                        $rutaArchivo = '../uploads/' . $nombreArchivo;
-                                        
-                                        // Verificar si el archivo de evidencia existe
-                                        if (file_exists($rutaArchivo)) {
-                                            echo '<a href="ver_evidencia.php?idRequerimiento=' . $row['Idrequerimiento'] . '" class="btn btn-sm btn-info"><i class="fas fa-file"></i> Ver Evidencia</a>';
-                                        } else {
-                                            echo 'No hay evidencia adjunta';
-                                        }
-                                    ?>
-                                </td>
-                                <td><?= $row['NombreProyecto'] ?></td> <!-- Mostrar el nombre o descripción del proyecto -->
-                            </tr>
-                        <?php endwhile; ?> 
-                    </tbody>    
+                                <?php 
+                                    $nombreArchivo = $row['Evidencia'];
+                                    $rutaArchivo = '../uploads/' . $nombreArchivo;
+                                    if (file_exists($rutaArchivo)) {
+                                        echo '<a href="ver_evidencia.php?idRequerimiento=' . $row['Idrequerimiento'] . '" class="btn btn-sm btn-info"><i class="fas fa-file"></i> Ver Evidencia</a>';
+                                    } else {
+                                        echo 'No hay evidencia adjunta';
+                                    }
+                                ?>
+                            </td>
+                            <td><?= $row['NombreProyecto'] ?></td>
+                        </tr>
+                    <?php endwhile; ?> 
+                </tbody>    
             </table>
         </div>
-        <!-- Formulario para regresar el requerimiento -->
         <form id="form-regresar" method="POST" action="" style="display: none;">
             <input type="hidden" id="id" name="id">
             <input type="hidden" id="comentario" name="comentario">
         </form>
         <a href="admin.php" class="btn btn-secondary mt-3"><i class="fas fa-arrow-left"></i> Volver a la página principal</a>
     </div>
-    <!-- Integrar Bootstrap JS y dependencias -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
