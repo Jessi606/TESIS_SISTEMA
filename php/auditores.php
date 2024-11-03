@@ -64,7 +64,7 @@ if (isset($_GET['success']) && $_GET['success'] == 1) {
 </head>
 <body>
 <div class="container">
-    <h1 class="mt-5">Lista de Auditores</h1>
+    <h1 class="mt-5">Registrar de Auditores</h1>
 
     <!-- Mostrar mensaje de éxito o error -->
     <?= $mensaje ?>

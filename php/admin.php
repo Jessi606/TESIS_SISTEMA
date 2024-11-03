@@ -4,14 +4,13 @@
     <meta charset="UTF-8">
     <title>Panel Administrativo</title>
     <link rel="stylesheet" href="estiloadmin.css">
-    <!-- Font Awesome Cdn Link -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
 </head>
 <body>
     <div class="container">
         <!-- Menú de navegación -->
-        <nav>
+         <!-- Menú de navegación -->
+         <nav>
             <ul>
                 <li class="logo">
                     <img src="images/logo.jpg"> 
@@ -87,74 +86,72 @@
                 </li>
             </ul>
         </nav>
-        
         <section class="main">
-    <div class="card">
-        <div class="main-top">
-            <?php
-            // Incluir archivo de conexión
-            include_once 'conexion.php';
-
-            // Establecer conexión a la base de datos
-            $conn = conectarDB();
-
-            // Obtener el nombre de usuario
-            $idUsuario = 1; // Aquí debes establecer el ID del usuario actualmente logueado
-            $queryUsuario = "SELECT Nombre FROM usuarios WHERE IDusuario = $idUsuario";
-            $resultUsuario = $conn->query($queryUsuario);
-
-            if ($resultUsuario->num_rows > 0) {
-                $usuario = $resultUsuario->fetch_assoc();
-                $nombreUsuario = $usuario['Nombre'];
-            } else {
-                $nombreUsuario = "Usuario Desconocido"; // Manejo de caso por defecto
-            }
-            ?>
-            <h1>Bienvenido/a, <?php echo $nombreUsuario; ?></h1>
-            <i class="fas fa-user-cog"></i>
-        </div>
-        <div class="main-skills">
-            <!-- Sección para mostrar los próximos eventos -->
             <div class="card">
-                <i class="fas fa-calendar-alt"></i>
-                <h3>Próximos Eventos</h3>
-                <ul>
+                <div class="main-top">
                     <?php
-                    // Consulta para obtener los próximos eventos con detalles
-                    $queryEventos = "SELECT e.Nombre AS titulo, e.Fecha_evento AS fecha_inicio
-                                    FROM eventos e
-                                    WHERE e.Fecha_evento > NOW()
-                                    ORDER BY e.Fecha_evento ASC
-                                    LIMIT 5";
+                    include_once 'conexion.php';
+                    $conn = conectarDB();
+                    $idUsuario = 1;
+                    $queryUsuario = "SELECT Nombre FROM usuarios WHERE IDusuario = $idUsuario";
+                    $resultUsuario = $conn->query($queryUsuario);
 
-                    $resultEventos = $conn->query($queryEventos);
-
-                    // Verificar si se obtuvieron resultados
-                    if ($resultEventos->num_rows > 0) {
-                        while ($evento = $resultEventos->fetch_assoc()) {
-                            echo "<li>{$evento['titulo']} - {$evento['fecha_inicio']}</li>";
-                        }
+                    if ($resultUsuario->num_rows > 0) {
+                        $usuario = $resultUsuario->fetch_assoc();
+                        $nombreUsuario = $usuario['Nombre'];
                     } else {
-                        echo "<p>No hay próximos eventos registrados.</p>";
+                        $nombreUsuario = "Usuario Desconocido";
                     }
-
-                    // Cerrar conexión
-                    $conn->close();
                     ?>
-                </ul>
-            </div>
+                    <h1>Bienvenido/a, <?php echo $nombreUsuario; ?></h1>
+                    <div class="top-icons">
+                        <i class="fas fa-user-cog user-icon" title="Configuración de Usuario"></i>
+                        <a href="ayuda.php" class="btn-help" title="Ayuda">
+                            <i class="fas fa-question-circle help-icon"></i>
+                        </a>
+                    </div>
+                </div>
 
-            <!-- Botón para ir al calendario -->
-            <div class="calendar-button">
-                <a href="calendario.php" class="btn btn-primary">
-                    <i class="fas fa-calendar-alt"></i> Ir al Calendario
-                </a>
+                <div class="main-skills">
+                    <!-- Sección de eventos -->
+                    <div class="events-card">
+                        <div class="events-header">
+                            <h3>Próximos Eventos</h3>
+                        </div>
+                        <div class="events-container">
+                            <ul class="events-list">
+                                <?php
+                                $queryEventos = "SELECT Nombre AS titulo, Fecha_evento FROM eventos WHERE Fecha_evento > NOW() ORDER BY Fecha_evento ASC LIMIT 5";
+                                $resultEventos = $conn->query($queryEventos);
+
+                                if ($resultEventos->num_rows > 0) {
+                                    while ($evento = $resultEventos->fetch_assoc()) {
+                                        $fecha = date("d M", strtotime($evento['Fecha_evento']));
+                                        $titulo = $evento['titulo'];
+
+                                        echo "
+                                        <li class='event-item'>
+                                            <span class='event-date'>$fecha</span>
+                                            <span class='event-title'>$titulo</span>
+                                        </li>";
+                                    }
+                                } else {
+                                    echo "<p class='no-events'><i class='fas fa-info-circle'></i> No hay próximos eventos registrados.</p>";
+                                }
+                                ?>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Botón para ir al calendario -->
+                    <div class="calendar-button">
+                        <a href="calendario.php" class="btn-calendar">
+                            <i class="fas fa-calendar-alt"></i> Ir al Calendario
+                        </a>  
+                    </div>
+                </div>
             </div>
-        </div>
+        </section>
     </div>
-</section>
-
-
-</div>
 </body>
 </html>

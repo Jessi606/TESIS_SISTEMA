@@ -7,21 +7,54 @@ $sql = "SELECT
             p.Fecha_inicio, 
             p.Fecha_fin, 
             p.Prioridad, 
-            GROUP_CONCAT(a.Nombre SEPARATOR '<br>') as NombresAuditores,
-            GROUP_CONCAT(a.NivelExperiencia SEPARATOR '<br>') as NivelesExperiencia,
+            GROUP_CONCAT(CONCAT(a.Nombre, ' (', a.NivelExperiencia, ')') SEPARATOR '<br>') as AuditoresConCargos,
             p.Fase_proyecto, 
             p.Estado, 
             p.Fecha_creacion,
-            p.Creador_proyecto  /* Agregamos el campo Creador_proyecto */
+            p.Creador_proyecto  
         FROM 
             proyecto_auditoria p
             LEFT JOIN equipo_trabajo et ON p.Idproyecto = et.Idproyecto
             LEFT JOIN auditores a ON et.IDusuario = a.IDusuario
         GROUP BY p.Idproyecto";
 $result = $conn->query($sql);
+
+// Función para registrar en la auditoría
+function registrarAuditoriaProyecto($conn, $idProyecto, $descripcionProyecto, $detalles, $idUsuario) {
+    $detalles = "El proyecto '$descripcionProyecto' con ID $idProyecto ha sido $detalles";
+    $sql = "INSERT INTO auditoria_proyectos (Idproyecto, Detalles, FechaHora, IDusuario) VALUES (?, ?, current_timestamp(), ?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('isi', $idProyecto, $detalles, $idUsuario);
+    $stmt->execute();
+}
+
+// Anular proyecto
+if (isset($_GET['anular'])) {
+    $idProyecto = $_GET['anular'];
+    $estadoAnulado = "Anulado";
+
+    // Obtener el nombre del proyecto antes de anularlo
+    $stmtNombre = $conn->prepare("SELECT Descripcion FROM proyecto_auditoria WHERE Idproyecto = ?");
+    $stmtNombre->bind_param('i', $idProyecto);
+    $stmtNombre->execute();
+    $resultNombre = $stmtNombre->get_result();
+    $descripcionProyecto = $resultNombre->fetch_assoc()['Descripcion'];
+
+    // Actualizar el estado del proyecto a "Anulado"
+    $stmt = $conn->prepare("UPDATE proyecto_auditoria SET Estado = ? WHERE Idproyecto = ?");
+    $stmt->bind_param('si', $estadoAnulado, $idProyecto);
+    if ($stmt->execute()) {
+        // Registrar en la auditoría con el nombre del proyecto
+        $idUsuario = 1; // Cambia por el ID del usuario actual
+        registrarAuditoriaProyecto($conn, $idProyecto, $descripcionProyecto, "anulado", $idUsuario);
+        
+        header("Location: proyectos_auditoria.php");
+        exit();
+    }
+}
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -50,26 +83,6 @@ $result = $conn->query($sql);
             margin-top: 20px;
         }
 
-        .btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
-        }
-
-        .btn-primary:hover {
-            background-color: #0056b3;
-            border-color: #0056b3;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d;
-            border-color: #6c757d;
-        }
-
-        .btn-secondary:hover {
-            background-color: #5a6268;
-            border-color: #545b62;
-        }
-
         .table th {
             background-color: #343a40;
             color: #fff;
@@ -79,64 +92,33 @@ $result = $conn->query($sql);
             background-color: #f8f9fa;
         }
 
-        .icon {
-            font-size: 18px;
-            margin-right: 5px;
+        /* Fila desactivada para proyectos anulados */
+        .row-disabled {
+            background-color: #c4c8cc !important;
+            color: #5a5c5e;
         }
 
-        /* Estilos de iconos de prioridad */
-        .priority-high {
-            color: #ff3333; /* Rojo */
+        /* Texto más oscuro en filas habilitadas */
+        .table .enabled-row {
+            color: #1b1e21;
         }
 
-        .priority-medium {
-            color: #ffa64d; /* Naranja */
+        /* Estilos para el botón "Anular" */
+        .btn-anular {
+            background-color: #f8d7da;
+            color: #dc3545;
+            border: 1px solid #f5c6cb;
         }
 
-        .priority-low {
-            color: #99cc00; /* Verde */
+        .btn-anular:disabled {
+            background-color: #d6d8db;
+            color: #6c757d;
+            border: 1px solid #c4c8cc;
+            cursor: not-allowed;
         }
 
-        /* Estilos de iconos de fase del proyecto */
-        .phase-planning {
-            color: #3377ff; /* Azul */
-        }
-
-        .phase-execution {
-            color: #ff9933; /* Naranja */
-        }
-
-        .phase-closure {
-            color: #33cc33; /* Verde */
-        }
-
-        /* Estilos de iconos de estado del proyecto */
-        .status-pending {
-            color: #999999; /* Gris */
-        }
-
-        .status-progress {
-            color: #ffcc00; /* Amarillo */
-        }
-
-        .status-completed {
-            color: #00cc00; /* Verde */
-        }
-
-        .status-cancelled {
-            color: #dc3545; /* Rojo */
-        }
-
-        .btn-danger {
-            background-color: #dc3545;
-            border-color: #dc3545;
-            color: #fff;
-        }
-
-        .btn-danger:hover {
-            background-color: #c82333;
-            border-color: #bd2130;
-            color: #fff;
+        .btn-anular i {
+            color: #dc3545;
         }
     </style>
 </head>
@@ -171,88 +153,37 @@ $result = $conn->query($sql);
         <?php
         if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
-                // Iconos de prioridad
-                $priority_icon = '';
-                switch ($row['Prioridad']) {
-                    case 'Alta':
-                        $priority_icon = '<i class="fas fa-exclamation-circle priority-high icon"></i>';
-                        break;
-                    case 'Media':
-                        $priority_icon = '<i class="fas fa-exclamation-circle priority-medium icon"></i>';
-                        break;
-                    case 'Baja':
-                        $priority_icon = '<i class="fas fa-exclamation-circle priority-low icon"></i>';
-                        break;
-                    default:
-                        $priority_icon = '';
-                }
+                $isAnulado = $row['Estado'] === "Anulado";
+                $rowClass = $isAnulado ? "row-disabled" : "enabled-row";
 
-                // Iconos de fase del proyecto
-                $phase_icon = '';
-                switch ($row['Fase_proyecto']) {
-                    case 'Planificación':
-                        $phase_icon = '<i class="fas fa-cogs phase-planning icon"></i>';
-                        break;
-                    case 'Ejecución':
-                        $phase_icon = '<i class="fas fa-wrench phase-execution icon"></i>';
-                        break;
-                    case 'Cierre':
-                        $phase_icon = '<i class="fas fa-check-circle phase-closure icon"></i>';
-                        break;
-                    default:
-                        $phase_icon = '';
-                }
+                // Botón de anular completamente deshabilitado si el estado es "Anulado"
+                $botonAnular = $isAnulado 
+                    ? "<button class='btn btn-anular btn-sm' disabled><i class='fas fa-ban'></i> Anular</button>"
+                    : "<a href='?anular={$row['Idproyecto']}' class='btn btn-anular btn-sm'><i class='fas fa-ban'></i> Anular</a>";
 
-                // Iconos de estado del proyecto
-                $status_icon = '';
-                switch ($row['Estado']) {
-                    case 'Pendiente':
-                        $status_icon = '<i class="far fa-clock status-pending icon"></i>';
-                        break;
-                    case 'En Progreso':
-                        $status_icon = '<i class="fas fa-spinner status-progress icon"></i>';
-                        break;
-                    case 'Completado':
-                        $status_icon = '<i class="fas fa-check status-completed icon"></i>';
-                        break;
-                    case 'Cancelado':
-                        $status_icon = '<i class="fas fa-ban status-cancelled icon"></i>';
-                        break;
-                    default:
-                        $status_icon = '';
-                }
+                // Botones de acción
+                $acciones = $isAnulado ? $botonAnular : "
+                    <a href='editar_proyecto.php?id={$row['Idproyecto']}' class='btn btn-warning btn-sm'><i class='fas fa-edit'></i> Editar</a>
+                    $botonAnular
+                    <a href='ver_proyecto.php?id={$row['Idproyecto']}' class='btn btn-info btn-sm'><i class='fas fa-eye'></i> Ver Detalles</a>
+                ";
 
-                // Mostrar los auditores y sus niveles de experiencia
-                $auditores = explode('<br>', $row['NombresAuditores']);
-                $niveles = explode('<br>', $row['NivelesExperiencia']);
-                $auditores_info = '';
-                for ($i = 0; $i < count($auditores); $i++) {
-                    $auditores_info .= $auditores[$i] . ' (' . $niveles[$i] . ')';
-                    if ($i < count($auditores) - 1) {
-                        $auditores_info .= '<br>';
-                    }
-                }
-
-                echo "<tr>
+                echo "<tr class='$rowClass'>
                         <td>{$row['Idproyecto']}</td>
                         <td>{$row['Descripcion']}</td>
                         <td>{$row['Fecha_inicio']}</td>
                         <td>{$row['Fecha_fin']}</td>
-                        <td>{$priority_icon} {$row['Prioridad']}</td>
-                        <td>{$auditores_info}</td>
-                        <td>{$phase_icon} {$row['Fase_proyecto']}</td>
-                        <td>{$status_icon} {$row['Estado']}</td>
+                        <td>{$row['Prioridad']}</td>
+                        <td>{$row['AuditoresConCargos']}</td>
+                        <td>{$row['Fase_proyecto']}</td>
+                        <td>{$row['Estado']}</td>
                         <td>{$row['Fecha_creacion']}</td>
                         <td>{$row['Creador_proyecto']}</td>
-                        <td>
-                            <a href='editar_proyecto.php?id={$row['Idproyecto']}' class='btn btn-warning btn-sm'><i class='fas fa-edit'></i> Editar</a>
-                            <a href='eliminar_proyecto.php?id={$row['Idproyecto']}' class='btn btn-danger btn-sm' onclick='return confirmarEliminacion()'><i class='fas fa-trash'></i> Eliminar</a>
-                            <a href='ver_proyecto.php?id={$row['Idproyecto']}' class='btn btn-info btn-sm'><i class='fas fa-eye'></i> Ver Detalles</a>
-                        </td>
+                        <td>$acciones</td>
                     </tr>";
             }
         } else {
-            echo "<tr><td colspan='10'>No hay proyectos registrados.</td></tr>";
+            echo "<tr><td colspan='11'>No hay proyectos registrados.</td></tr>";
         }
         ?>
         </tbody>
@@ -263,10 +194,5 @@ $result = $conn->query($sql);
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-<script>
-    function confirmarEliminacion() {
-        return confirm('¿Estás seguro de que deseas eliminar este proyecto?');
-    }
-</script>
 </body>
 </html>

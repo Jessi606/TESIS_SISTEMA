@@ -1,4 +1,4 @@
-<?php
+<?php 
 // Incluir el archivo de conexión
 include 'conexion.php';
 
@@ -22,8 +22,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $password = mysqli_real_escape_string($conn, $password);
         $id_rol = mysqli_real_escape_string($conn, $id_rol);
 
-        // Consulta SQL para insertar un nuevo usuario
-        $sql = "INSERT INTO usuarios (Nombre, Password, Idrol) VALUES ('$nombre', '$password', '$id_rol')";
+        // Consulta SQL para insertar un nuevo usuario con estado activo
+        $sql = "INSERT INTO usuarios (Nombre, Password, Idrol, Estado) VALUES ('$nombre', '$password', '$id_rol', 1)";
         
         // Ejecutar la consulta y verificar si se realizó correctamente
         if ($conn->query($sql) === TRUE) {
@@ -74,11 +74,11 @@ $conn->close();
         .container {
             max-width: 500px;
             margin: auto;
-            border-radius: 10px; /* Borde redondeado */
-            margin-top: 50px; /* Espaciado desde arriba */
-            background-color: #fff; /* Fondo blanco */
-            padding: 20px; /* Espaciado interno */
-            box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1); /* Sombra */
+            border-radius: 10px;
+            margin-top: 50px;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1);
         }
         .form-group {
             margin-bottom: 20px;
@@ -103,7 +103,7 @@ $conn->close();
             margin-top: 20px;
         }
         h2 {
-            text-align: center; /* Centrar el texto */
+            text-align: center;
         }
     </style>
 </head>
@@ -118,15 +118,15 @@ $conn->close();
         <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
             <div class="form-group">
                 <label for="nombre">Nombre:</label>
-                <input type="text" class="form-control" id="nombre" name="Nombre">
+                <input type="text" class="form-control" id="nombre" name="Nombre" required>
             </div>
             <div class="form-group">
                 <label for="password">Contraseña:</label>
-                <input type="password" class="form-control" id="password" name="Password">
+                <input type="password" class="form-control" id="password" name="Password" required>
             </div>
             <div class="form-group">
                 <label for="id_rol">Rol:</label>
-                <select class="form-control" id="id_rol" name="Idrol">
+                <select class="form-control" id="id_rol" name="Idrol" required>
                     <?php foreach ($roles as $id => $descripcion) { ?>
                         <option value="<?php echo $id; ?>"><?php echo $descripcion; ?></option>
                     <?php } ?>

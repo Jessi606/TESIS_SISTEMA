@@ -2,6 +2,9 @@
 include('conexion.php');
 $conn = conectarDB();
 
+// Establecer la zona horaria de Paraguay (Asunción)
+date_default_timezone_set('America/Asuncion');
+
 // Función para obtener la lista de usuarios por nivel de experiencia desde la tabla auditores
 function obtenerUsuariosPorNivel($conn, $nivel) {
     $sql = "SELECT IDusuario, CONCAT(Nombre, ' ', Apellido) AS NombreCompleto
@@ -17,8 +20,8 @@ function obtenerUsuariosPorNivel($conn, $nivel) {
 
 // Función para registrar acciones en la auditoría de proyectos
 function registrarAuditoriaProyecto($conn, $idProyecto, $detalles, $idUsuario) {
-    $sql = "INSERT INTO auditoria_proyectos (IdAuditoria, Idproyecto, Detalles, FechaHora, IDusuario) 
-            VALUES (NULL, ?, ?, current_timestamp(), ?)";
+    $sql = "INSERT INTO auditoria_proyectos (Idproyecto, Detalles, FechaHora, IDusuario) 
+            VALUES (?, ?, current_timestamp(), ?)";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param('isi', $idProyecto, $detalles, $idUsuario);
     $stmt->execute();
@@ -142,7 +145,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
 
             // Registrar la acción en el log de auditoría
-            $accion = "Edición de Proyecto";
             $detalles = "Se ha actualizado el proyecto con ID $id_proyecto. Cambios realizados: Antes - $detalles_anterior, Después - $detalles_nuevo";
             $idUsuario = 1; // Debes ajustar esto para obtener el ID del usuario actual según tu lógica de sesión
             registrarAuditoriaProyecto($conn, $id_proyecto, $detalles, $idUsuario);
@@ -161,6 +163,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 // Cerrar la conexión a la base de datos
 $conn->close();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="es">
@@ -246,7 +249,6 @@ $conn->close();
                     <option value="Pendiente" <?php echo ($estado == 'Pendiente') ? 'selected' : ''; ?>>Pendiente</option>
                     <option value="En Progreso" <?php echo ($estado == 'En Progreso') ? 'selected' : ''; ?>>En Progreso</option>
                     <option value="Completado" <?php echo ($estado == 'Completado') ? 'selected' : ''; ?>>Completado</option>
-                    <option value="Cancelado" <?php echo ($estado == 'Cancelado') ? 'selected' : ''; ?>>Cancelado</option>
                 </select>
             </div>
 

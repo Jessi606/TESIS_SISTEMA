@@ -1,4 +1,7 @@
 <?php
+// Establecer la zona horaria de Paraguay (Asunción)
+date_default_timezone_set('America/Asuncion');
+
 // Incluir el archivo de conexión
 include 'conexion.php';
 
@@ -70,7 +73,7 @@ if ($query === false) {
             color: #333;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1800px;
             margin: auto;
             margin-top: 50px;
             background-color: #fff;
