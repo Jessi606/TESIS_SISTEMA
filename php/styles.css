@@ -1,0 +1,181 @@
+/* General Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #a6bbd7 !important;
+    padding: 20px;
+    margin: 0;
+}
+
+/* Container Styles */
+.container {
+    max-width: 800px;
+    margin: 20px auto; /* Ajuste del margen superior para centrar el calendario */
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Month Navigation */
+.month {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.month .prev, .month .next {
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: #007bff;
+}
+
+.month .prev:hover, .month .next:hover {
+    color: #0056b3;
+}
+
+.date {
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* Weekdays Styles */
+.weekdays {
+    display: flex;
+    justify-content: space-around;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    padding: 10px 0;
+    margin-bottom: 20px;
+}
+
+.weekdays div {
+    text-align: center;
+    flex: 1;
+    font-weight: bold;
+    color: #495057;
+    padding: 10px 0;
+    font-size: 0.9rem;
+}
+
+/* Days Grid */
+.days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.day {
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 0.9rem;
+    font-weight: bold;
+    border: 1px solid transparent;
+    position: relative;
+}
+
+.day:hover {
+    background-color: #f0f0f0;
+}
+
+.today {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Modal Styles */
+.modal-content {
+    background-color: #ffffff;
+    width: 90%;
+    max-width: 600px; /* Aumenta el ancho máximo del modal */
+    margin: 10% auto; /* Ajusta el margen para centrar el modal */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.form-group {
+    margin-bottom: 20px; /* Reducir el espacio entre grupos de formulario */
+}
+
+.form-control {
+    width: 100%; /* Ajusta el ancho del control del formulario */
+    padding: 8px;
+    font-size: 0.9rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.color-option {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+    cursor: pointer;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    transition: border-color 0.2s ease;
+}
+
+.color-option.selected {
+    border-color: #007bff;
+}
+
+/* Button Styles */
+.btn {
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-block;
+    width: 150px; /* Ensure uniform width */
+    height: 65px; /* Ensure uniform height */
+    text-align: center;
+    line-height: 30px; /* Center text vertically */
+    font-size: 0.9rem; /* Font size */
+    font-weight: bold; /* Font weight */
+}
+
+.btn:hover {
+    opacity: 0.8;
+}
+
+/* Buttons Group Styles */
+.buttons-group {
+    display: flex;
+    gap: 10px;
+    align-items: center; /* Center buttons vertically */
+}
+
+/* Specific Button Styles */
+.btn-today {
+    background-color: #007bff;
+}
+
+.btn-clear {
+    background-color: #dc3545;
+}
+
+.btn-back {
+    background-color: #6c757d;
+}
+
+.btn-save {
+    background-color: #28a745;
+}
+
+.btn-cancel {
+    background-color: #ffc107;
+}
+
+.close {
+    float: right;
+    cursor: pointer;
+}

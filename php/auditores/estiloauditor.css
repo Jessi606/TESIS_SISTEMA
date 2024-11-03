@@ -1,0 +1,114 @@
+* {
+    margin: 0;
+    padding: 0;
+    outline: none;
+    border: none;
+    text-decoration: none;
+    box-sizing: border-box;
+    font-family:sans-serif;
+}
+
+  
+body {
+    background: #a6bbd7;
+}
+
+.container{
+    display: flex;
+}
+
+nav {
+    position: relative;
+    top: 0;
+    bottom: 0;
+    height: 100vh;
+    left: 0;
+    background: #fff;
+    width: 300px;
+    overflow: hidden;
+    box-shadow: 0 20px 35px rgba(0, 0, 0, 0.904);
+}
+
+.logo {
+    text-align: center;
+    display: flex;
+    align-items: center;
+    padding: 20px;
+}
+
+
+.logo img {
+    width: 252px;
+    height: 77px;
+    border-radius: 5px;
+}
+
+.nav-title {
+    font-size: 20px;
+    font-weight: bold;
+    padding: 10px 20px;
+    color: #333; 
+}
+
+a {
+    position: relative;
+    color: rgb(85, 83, 83);
+    font-size: 18px;
+    display: table;
+    width: 280px;
+    padding: 10px;
+}
+
+nav .fas {
+    position: relative;
+    width: 70px;
+    height: 40px;
+    top: 14px;
+    font-size: 20px;
+    text-align: center;
+}
+
+.nav-item {
+    position: relative;
+    top: 12px;
+    margin-left: 10px;
+}
+
+a:hover {
+    background: #00BFFF;
+}
+  
+.logout{
+    position: absolute;
+    bottom: 0;
+}
+/* Estilo básico para el submenú */
+.submenu {
+    display: none;
+    position: absolute;
+    background-color: #fff; /* Fondo blanco */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra suave */
+    z-index: 1;
+}
+
+/* Estilo para mostrar el submenú cuando se pasa el mouse sobre el elemento padre */
+nav ul li:hover .submenu {
+    display: block;
+}
+
+/* Estilo para los elementos del submenú */
+.submenu li {
+    padding: 10px;
+}
+
+/* Estilo para los enlaces del submenú */
+.submenu a {
+    text-decoration: none;
+    color: #333; /* Color del texto */
+    display: block;
+}
+
+/* Estilo para el hover de los enlaces del submenú */
+.submenu a:hover {
+    background-color: #87CEFA; /* Cambio de color de fondo al pasar el mouse */
+}  

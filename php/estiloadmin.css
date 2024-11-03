@@ -1,0 +1,209 @@
+* {
+    margin: 0;
+    padding: 0;
+    outline: none;
+    border: none;
+    text-decoration: none;
+    box-sizing: border-box;
+    font-family:sans-serif;
+}
+
+  
+body {
+    background: #a6bbd7;
+}
+
+.container{
+    display: flex;
+}
+
+nav {
+    position: relative;
+    top: 0;
+    bottom: 0;
+    height: 100vh;
+    left: 0;
+    background: #fff;
+    width: 350px;
+    overflow: hidden;
+    box-shadow: 0 20px 35px rgba(0, 0, 0, 0.904);
+}
+
+.logo {
+    text-align: center;
+    display: flex;
+    align-items: center;
+    padding: 20px;
+}
+
+
+.logo img {
+    width: 252px;
+    height: 77px;
+    border-radius: 5px;
+}
+
+.nav-title {
+    font-size: 20px;
+    font-weight: bold;
+    padding: 10px 20px;
+    color: #333; 
+}
+
+a {
+    position: relative;
+    color: rgb(85, 83, 83);
+    font-size: 18px;
+    display: table;
+    width: 280px;
+    padding: 10px;
+}
+
+nav .fas {
+    position: relative;
+    width: 70px;
+    height: 40px;
+    top: 14px;
+    font-size: 20px;
+    text-align: center;
+}
+
+.nav-item {
+    position: relative;
+    top: 12px;
+    margin-left: 10px;
+}
+
+a:hover {
+    background: #00BFFF;
+}
+  
+.logout{
+    position: absolute;
+    bottom: 0;
+}
+/* Estilo básico para el submenú */
+.submenu {
+    display: none;
+    position: absolute;
+    background-color: #fff; /* Fondo blanco */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra suave */
+    z-index: 1;
+}
+
+/* Estilo para mostrar el submenú cuando se pasa el mouse sobre el elemento padre */
+nav ul li:hover .submenu {
+    display: block;
+}
+
+/* Estilo para los elementos del submenú */
+.submenu li {
+    padding: 10px;
+}
+
+/* Estilo para los enlaces del submenú */
+.submenu a {
+    text-decoration: none;
+    color: #333; /* Color del texto */
+    display: block;
+}
+
+/* Estilo para el hover de los enlaces del submenú */
+.submenu a:hover {
+    background-color: #87CEFA; /* Cambio de color de fondo al pasar el mouse */
+}  
+/* Estilos para la sección principal */
+section.main {
+    margin: 20px auto; /* 20px de margen arriba y abajo, auto en los lados para centrar horizontalmente */
+    background-color: #fff; /* Fondo blanco */
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1); /* Sombra suave */
+    padding: 20px;
+    --main-width: 70%; /* Ancho principal ajustable */
+    --main-height: 400px; /* Alto principal ajustable */
+    width: var(--main-width);
+    height: var(--main-height);
+}
+
+
+
+/* Estilos para la tarjeta principal */
+section.main .card {
+    background-color: #f8f9fa; /* Fondo gris claro */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra suave */
+    margin-bottom: 20px;
+    --card-width: 100%; /* Ancho tarjeta principal */
+    --card-height: auto; /* Alto tarjeta principal */
+    width: var(--card-width);
+    height: var(--card-height);
+}
+
+/* Estilos para el encabezado */
+section.main .main-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+section.main .main-top h1 {
+    font-size: 24px;
+    color: #333; /* Color de texto oscuro */
+}
+
+section.main .main-top i {
+    font-size: 24px;
+    color: #007bff; /* Color azul */
+}
+
+/* Estilos para la sección de habilidades */
+section.main .main-skills {
+    background-color: #f8f9fa; /* Fondo gris claro */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra suave */
+    --skills-width: 100%; /* Ancho sección de habilidades */
+    --skills-height: auto; /* Alto sección de habilidades */
+    width: var(--skills-width);
+    height: var(--skills-height);
+}
+
+section.main .main-skills h3 {
+    font-size: 20px;
+    color: #333; /* Color de texto oscuro */
+    margin-bottom: 10px;
+}
+
+section.main .main-skills .card {
+    padding: 10px;
+    margin-top: 10px;
+    background-color: #fff; /* Fondo blanco */
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+
+section.main .main-skills ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+section.main .main-skills ul li {
+    font-size: 16px;
+    color: #555; /* Color de texto gris */
+    margin-bottom: 8px;
+}
+
+section.main .main-skills p {
+    font-size: 16px;
+    color: #555; /* Color de texto gris */
+    margin: 0;
+}
+
+/* Estilos adicionales */
+section.main .card i {
+    margin-right: 10px;
+    font-size: 24px;
+    color: #007bff; /* Color azul */
+}
