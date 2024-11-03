@@ -76,11 +76,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['agregar_tarea'])) {
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt_insert = $conn->prepare($sql_insert);
     $stmt_insert->bind_param("ssssssssi", $descripcion, $fecha_inicio, $fecha_fin, $fecha_creacion, $prioridad, $estado_tarea, $user_id, $responsable_id, $proyecto_id);
+    
     if ($stmt_insert->execute()) {
         $tarea_id = $stmt_insert->insert_id;
         $accion_auditoria = "AGREGAR TAREA";
         $detalles_auditoria = "Descripción: $descripcion, Fecha de inicio: $fecha_inicio, Fecha de fin: $fecha_fin, Prioridad: $prioridad, Estado: $estado_tarea, Responsable: $responsable, Proyecto: $proyecto_descripcion";
+        
+        // Registrar la acción en el log de auditoría
         registrarAuditoria($conn, $user_id, $accion_auditoria, $detalles_auditoria, $tarea_id);
+        
         header("Location: tarea.php");
         exit;
     } else {

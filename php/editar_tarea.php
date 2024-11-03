@@ -2,7 +2,6 @@
 session_start();
 include('conexion.php');
 
-// Establecer la conexión a la base de datos
 $conn = conectarDB();
 
 // Verificar la conexión
@@ -16,8 +15,26 @@ if (!isset($_SESSION['usuario_id'])) {
     exit();
 }
 
-// Función para registrar auditoría
+// Función para registrar auditoría y mostrar el nombre del responsable en detalles
 function registrarAuditoria($conn, $usuario_id, $accion, $detalles, $tarea_id) {
+    // Reemplazar el ID del responsable con el nombre en los detalles si es necesario
+    if (strpos($detalles, 'Responsable:') !== false) {
+        preg_match('/Responsable: (\d+)/', $detalles, $matches);
+        if (!empty($matches[1])) {
+            $responsable_id = $matches[1];
+            $sql_responsable = "SELECT Nombre FROM usuarios WHERE IDusuario = ?";
+            $stmt_responsable = $conn->prepare($sql_responsable);
+            $stmt_responsable->bind_param("i", $responsable_id);
+            $stmt_responsable->execute();
+            $result_responsable = $stmt_responsable->get_result();
+            if ($result_responsable->num_rows > 0) {
+                $row_responsable = $result_responsable->fetch_assoc();
+                $responsable_nombre = $row_responsable['Nombre'];
+                $detalles = str_replace("Responsable: $responsable_id", "Responsable: $responsable_nombre", $detalles);
+            }
+        }
+    }
+
     $sql_auditoria = "INSERT INTO auditoria_tarea (IDusuario, Accion, Detalles, FechaHora, Idtarea) 
                       VALUES (?, ?, ?, NOW(), ?)";
     $stmt_auditoria = $conn->prepare($sql_auditoria);
@@ -29,11 +46,15 @@ function registrarAuditoria($conn, $usuario_id, $accion, $detalles, $tarea_id) {
 if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['id'])) {
     $id_tarea = $_GET['id'];
 
-    // Consultar la información de la tarea a editar
-    $sql_select = "SELECT * FROM tareas WHERE Idtarea = $id_tarea";
-    $result = mysqli_query($conn, $sql_select);
-    if (mysqli_num_rows($result) == 1) {
-        $row = mysqli_fetch_assoc($result);
+    // Consultar la información de la tarea y obtener el nombre del responsable actual
+    $sql_select = "SELECT t.*, u.Nombre as NombreResponsable FROM tareas t LEFT JOIN usuarios u ON t.Responsable = u.IDusuario WHERE t.Idtarea = ?";
+    $stmt = $conn->prepare($sql_select);
+    $stmt->bind_param("i", $id_tarea);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows == 1) {
+        $row = $result->fetch_assoc();
     } else {
         echo "No se encontró la tarea a editar.";
         exit;
@@ -51,15 +72,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['editar_tarea'])) {
     $responsable = $_POST['responsable'];
 
     // Actualizar la tarea en la base de datos
-    $sql_update = "UPDATE tareas SET Descripcion = '$descripcion', Fecha_inicio = '$fecha_inicio', 
-                    Fecha_fin = '$fecha_fin', Prioridad = '$prioridad', Estado_tarea = '$estado_tarea', 
-                    Responsable = '$responsable' 
-                    WHERE Idtarea = $id_tarea";
-    if (mysqli_query($conn, $sql_update)) {
-        // Registrar la acción de auditoría
-        $usuario_id = $_SESSION['usuario_id']; // Asegurarse de que $_SESSION esté definida
+    $sql_update = "UPDATE tareas SET Descripcion = ?, Fecha_inicio = ?, Fecha_fin = ?, Prioridad = ?, Estado_tarea = ?, Responsable = ? WHERE Idtarea = ?";
+    $stmt_update = $conn->prepare($sql_update);
+    $stmt_update->bind_param("sssssii", $descripcion, $fecha_inicio, $fecha_fin, $prioridad, $estado_tarea, $responsable, $id_tarea);
+    
+    if ($stmt_update->execute()) {
+        // Registrar la acción de auditoría con el nombre del responsable en lugar de su ID
+        $usuario_id = $_SESSION['usuario_id'];
         $accion_auditoria = "MODIFICAR TAREA";
-        $detalles_auditoria = "Descripción: $descripcion, Fecha de inicio: $fecha_inicio, Fecha de fin: $fecha_fin, Prioridad: $prioridad, Estado: $estado_tarea, Responsable: $responsable";
+        $sql_responsable_nombre = "SELECT Nombre FROM usuarios WHERE IDusuario = ?";
+        $stmt_responsable_nombre = $conn->prepare($sql_responsable_nombre);
+        $stmt_responsable_nombre->bind_param("i", $responsable);
+        $stmt_responsable_nombre->execute();
+        $result_responsable_nombre = $stmt_responsable_nombre->get_result();
+        $nombre_responsable = $result_responsable_nombre->fetch_assoc()['Nombre'];
+        $detalles_auditoria = "Descripción: $descripcion, Fecha de inicio: $fecha_inicio, Fecha de fin: $fecha_fin, Prioridad: $prioridad, Estado: $estado_tarea, Responsable: $nombre_responsable";
         registrarAuditoria($conn, $usuario_id, $accion_auditoria, $detalles_auditoria, $id_tarea);
 
         // Redireccionar a la página principal después de editar la tarea
@@ -117,7 +144,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['editar_tarea'])) {
             <label for="estado_tarea">Estado:</label>
             <select class="form-control" id="estado_tarea" name="estado_tarea" required>
                 <option value="Pendiente" <?php if ($row['Estado_tarea'] == 'Pendiente') echo 'selected'; ?>>Pendiente</option>
-                <option value="En proceso" <?php if ($row['Estado_tarea'] == 'En proceso') echo 'selected'; ?>>En proceso</option>
+                <option value="En Progreso" <?php if ($row['Estado_tarea'] == 'En Progreso') echo 'selected'; ?>>En Progreso</option>
                 <option value="Completada" <?php if ($row['Estado_tarea'] == 'Completada') echo 'selected'; ?>>Completada</option>
             </select>
         </div>
@@ -125,16 +152,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['editar_tarea'])) {
             <label for="responsable">Responsable:</label>
             <select class="form-control" id="responsable" name="responsable" required>
                 <?php
-                // Consulta SQL para obtener solo los auditores como opciones de responsables
                 $sql_auditores = "SELECT IDusuario, Nombre FROM usuarios WHERE Idrol = 2";
-                $result_auditores = mysqli_query($conn, $sql_auditores);
-                // Iterar sobre los resultados y mostrar cada auditor como una opción en el select
-                while ($auditor = mysqli_fetch_assoc($result_auditores)) {
-                    echo "<option value='{$auditor['Nombre']}' ";
-                    if ($auditor['Nombre'] == $row['Responsable']) {
-                        echo 'selected';
-                    }
-                    echo ">{$auditor['Nombre']}</option>";
+                $result_auditores = $conn->query($sql_auditores);
+                while ($auditor = $result_auditores->fetch_assoc()) {
+                    $selected = ($auditor['IDusuario'] == $row['Responsable']) ? 'selected' : '';
+                    echo "<option value='{$auditor['IDusuario']}' $selected>{$auditor['Nombre']}</option>";
                 }
                 ?>
             </select>

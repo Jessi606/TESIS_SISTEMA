@@ -17,135 +17,42 @@ function registrarAuditoria($conn, $usuario_id, $accion, $detalles, $tarea_id) {
     $stmt_auditoria->execute();
 }
 
-// Obtener el nombre del usuario que ha iniciado sesión
-$user_id = $_SESSION['usuario_id'];
-$sql_usuario = "SELECT u.Nombre, r.Descripcion AS Rol 
-                FROM usuarios u 
-                LEFT JOIN roles r ON u.Idrol = r.Idrol 
-                WHERE u.IDusuario = ?";
-$stmt_usuario = $conn->prepare($sql_usuario);
-$stmt_usuario->bind_param("i", $user_id);
-$stmt_usuario->execute();
-$result_usuario = $stmt_usuario->get_result();
-if ($result_usuario->num_rows > 0) {
-    $user = $result_usuario->fetch_assoc();
-    $solicitante = $user['Nombre'];
-} else {
-    $solicitante = "";
+// Anular tarea
+if (isset($_GET['anular_tarea'])) {
+    $id_tarea = $_GET['anular_tarea'];
+    $estadoAnulado = "Anulada";
+
+    // Obtener la descripción de la tarea antes de anularla
+    $stmtNombre = $conn->prepare("SELECT Descripcion FROM tareas WHERE Idtarea = ?");
+    $stmtNombre->bind_param('i', $id_tarea);
+    $stmtNombre->execute();
+    $resultNombre = $stmtNombre->get_result();
+    $descripcionTarea = $resultNombre->fetch_assoc()['Descripcion'];
+
+    // Actualizar el estado de la tarea a "Anulada"
+    $stmt = $conn->prepare("UPDATE tareas SET Estado_tarea = ? WHERE Idtarea = ?");
+    $stmt->bind_param('si', $estadoAnulado, $id_tarea);
+    
+    if ($stmt->execute()) {
+        // Registrar en la auditoría con el nombre de la tarea
+        $usuario_id = $_SESSION['usuario_id'];
+        registrarAuditoria($conn, $usuario_id, "ANULAR TAREA", "Se anuló la tarea '$descripcionTarea'", $id_tarea);
+        
+        header("Location: tarea.php");
+        exit();
+    }
 }
 
-// Consulta SQL para obtener las tareas con nombre de proyecto y nombre de responsable
+// Consulta SQL para obtener las tareas y los datos del proyecto asociado
 $sql = "SELECT t.Idtarea, t.Descripcion, t.Fecha_inicio, t.Fecha_fin, t.Fecha_creacion, 
-        t.Prioridad, t.Estado_tarea, u.Nombre AS NombreResponsable, p.Descripcion AS NombreProyecto 
+        t.Prioridad, t.Estado_tarea, t.Creador_tarea, u.Nombre AS NombreResponsable, 
+        p.Descripcion AS NombreProyecto, u2.Nombre AS NombreCreador 
         FROM tareas t 
         LEFT JOIN proyecto_auditoria p ON t.Idproyecto = p.Idproyecto 
-        LEFT JOIN usuarios u ON t.Responsable = u.IDusuario";
+        LEFT JOIN usuarios u ON t.Responsable = u.IDusuario 
+        LEFT JOIN usuarios u2 ON t.Creador_tarea = u2.IDusuario";
 $result = $conn->query($sql);
 
-// Manejar la acción de agregar tarea
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['agregar_tarea'])) {
-    $descripcion = isset($_POST['descripcion']) ? $_POST['descripcion'] : '';
-    $fecha_inicio = isset($_POST['fecha_inicio']) ? $_POST['fecha_inicio'] : '';
-    $fecha_fin = isset($_POST['fecha_fin']) ? $_POST['fecha_fin'] : '';
-    $prioridad = isset($_POST['prioridad']) ? $_POST['prioridad'] : '';
-    $estado_tarea = isset($_POST['estado_tarea']) ? $_POST['estado_tarea'] : '';
-    $proyecto_id = isset($_POST['proyecto_id']) ? $_POST['proyecto_id'] : '';
-    $responsable_id = isset($_POST['responsable']) ? $_POST['responsable'] : '';
-
-    $sql_responsable = "SELECT Nombre FROM usuarios WHERE IDusuario = ?";
-    $stmt_responsable = $conn->prepare($sql_responsable);
-    $stmt_responsable->bind_param("i", $responsable_id);
-    $stmt_responsable->execute();
-    $result_responsable = $stmt_responsable->get_result();
-    if ($result_responsable->num_rows > 0) {
-        $row_responsable = $result_responsable->fetch_assoc();
-        $responsable = $row_responsable['Nombre'];
-    } else {
-        $responsable = "Desconocido";
-    }
-
-    $sql_proyecto = "SELECT Descripcion FROM proyecto_auditoria WHERE Idproyecto = ?";
-    $stmt_proyecto = $conn->prepare($sql_proyecto);
-    $stmt_proyecto->bind_param("i", $proyecto_id);
-    $stmt_proyecto->execute();
-    $result_proyecto = $stmt_proyecto->get_result();
-    if ($result_proyecto->num_rows > 0) {
-        $row_proyecto = $result_proyecto->fetch_assoc();
-        $proyecto_descripcion = $row_proyecto['Descripcion'];
-    } else {
-        $proyecto_descripcion = "Proyecto Desconocido";
-    }
-
-    $fecha_creacion = date('Y-m-d H:i:s');
-    $sql_insert = "INSERT INTO tareas (Descripcion, Fecha_inicio, Fecha_fin, Fecha_creacion, Prioridad, Estado_tarea, Creador_tarea, Responsable, Idproyecto) 
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    $stmt_insert = $conn->prepare($sql_insert);
-    $stmt_insert->bind_param("ssssssssi", $descripcion, $fecha_inicio, $fecha_fin, $fecha_creacion, $prioridad, $estado_tarea, $solicitante, $responsable_id, $proyecto_id);
-    if ($stmt_insert->execute()) {
-        $tarea_id = $stmt_insert->insert_id;
-        $accion_auditoria = "AGREGAR TAREA";
-        $detalles_auditoria = "Descripción: $descripcion, Fecha de inicio: $fecha_inicio, Fecha de fin: $fecha_fin, Prioridad: $prioridad, Estado: $estado_tarea, Responsable: $responsable, Proyecto: $proyecto_descripcion";
-        registrarAuditoria($conn, $user_id, $accion_auditoria, $detalles_auditoria, $tarea_id);
-        header("Location: tarea.php");
-        exit;
-    } else {
-        echo "Error al agregar la tarea: " . $stmt_insert->error;
-    }
-}
-
-// Manejar la acción de modificar tarea
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['modificar_tarea'])) {
-    $idtarea = $_POST['id'];
-    $descripcion = $_POST['descripcion'];
-    $fecha_inicio = $_POST['fecha_inicio'];
-    $fecha_fin = $_POST['fecha_fin'];
-    $prioridad = $_POST['prioridad'];
-    $estado_tarea = $_POST['estado_tarea'];
-    $responsable_id = $_POST['responsable'];
-    $user_id = $_SESSION['usuario_id'];
-
-    $sql_update = "UPDATE tareas SET Descripcion = ?, Fecha_inicio = ?, Fecha_fin = ?, Prioridad = ?, Estado_tarea = ?, Responsable = ? WHERE Idtarea = ?";
-    $stmt_update = $conn->prepare($sql_update);
-    $stmt_update->bind_param("ssssssi", $descripcion, $fecha_inicio, $fecha_fin, $prioridad, $estado_tarea, $responsable_id, $idtarea);
-
-    if ($stmt_update->execute()) {
-        $accion_auditoria = "MODIFICAR TAREA";
-        $detalles_auditoria = "Descripción: $descripcion, Fecha de inicio: $fecha_inicio, Fecha de fin: $fecha_fin, Prioridad: $prioridad, Estado: $estado_tarea";
-        registrarAuditoria($conn, $user_id, $accion_auditoria, $detalles_auditoria, $idtarea);
-        header("Location: tarea.php");
-        exit;
-    } else {
-        echo "Error al modificar la tarea: " . $stmt_update->error;
-    }
-}
-
-// Manejar la acción de eliminar tarea
-if (isset($_GET['eliminar_tarea'])) {
-    $idtarea = $_GET['id'];
-    $user_id = $_SESSION['usuario_id'];
-
-    $sql_detalle = "SELECT * FROM tareas WHERE Idtarea = ?";
-    $stmt_detalle = $conn->prepare($sql_detalle);
-    $stmt_detalle->bind_param("i", $idtarea);
-    $stmt_detalle->execute();
-    $result_detalle = $stmt_detalle->get_result();
-    $row_detalle = $result_detalle->fetch_assoc();
-    $descripcion = $row_detalle['Descripcion'];
-
-    $sql_delete = "DELETE FROM tareas WHERE Idtarea = ?";
-    $stmt_delete = $conn->prepare($sql_delete);
-    $stmt_delete->bind_param("i", $idtarea);
-
-    if ($stmt_delete->execute()) {
-        $accion_auditoria = "ELIMINAR TAREA";
-        $detalles_auditoria = "Descripción: $descripcion";
-        registrarAuditoria($conn, $user_id, $accion_auditoria, $detalles_auditoria, $idtarea);
-        header("Location: tarea.php");
-        exit;
-    } else {
-        echo "Error al eliminar la tarea: " . $stmt_delete->error;
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -170,36 +77,33 @@ if (isset($_GET['eliminar_tarea'])) {
         .status-in-progress { color: #ffcc00; }
         .status-completed { color: #00cc00; }
         .status-pending { color: #999999; }
-        .btn-danger { background-color: #dc3545; border-color: #dc3545; color: #fff; }
-        .btn-danger:hover { background-color: #c82333; border-color: #bd2130; color: #fff; }
-        .btn-secondary {
-            background-color: #6c757d;
-            border-color: #6c757d;
-        }
-
-        .btn-secondary:hover {
-            background-color: #5a6268;
-            border-color: #545b62;
-        }
+        .status-anulada { color: #dc3545; }
+        .btn-anular { background-color: #f8d7da; color: #dc3545; border: 1px solid #f5c6cb; }
+        .btn-anular:disabled { background-color: #d6d8db; color: #6c757d; border: 1px solid #c4c8cc; cursor: not-allowed; }
+        .row-anulada { background-color: #c4c8cc !important; color: #5a5c5e; }
+        .button-group { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1 class="mt-5">Tareas de Auditoría</h1>
-        <a href="agregar_tarea.php" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Agregar Tarea</a>
-        <a href="registro_auditoria.php" class="btn btn-info mb-3"><i class="fas fa-file-alt"></i> Ver Registro de Auditoría</a>
-        <a href="/TESIS_SISTEMA/manuales_usuario/Gestión de Auditoría-Tareas.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
+        <div class="button-group">
+            <a href="agregar_tarea.php" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar Tarea</a>
+            <a href="registro_auditoria.php" class="btn btn-info"><i class="fas fa-file-alt"></i> Ver Registro de Auditoría</a>
+            <a href="/TESIS_SISTEMA/manuales_usuario/Gestión de Auditoría-Tareas.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
+        </div>
         <h2 class="mt-3">Tareas Registradas</h2>
         <table class="table table-striped mt-3">
             <thead>
                 <tr>
-                    <th>Código</th>
+                    <th>ID</th>
                     <th>Descripción</th>
                     <th>Fecha Inicio</th>
                     <th>Fecha Fin</th>
                     <th>Fecha Creación</th>
                     <th>Prioridad</th>
                     <th>Estado</th>
+                    <th>Creador</th>
                     <th>Responsable</th>
                     <th>Proyecto</th>
                     <th>Acciones</th>
@@ -209,10 +113,17 @@ if (isset($_GET['eliminar_tarea'])) {
                 <?php
                 if ($result->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
-                        // Iconos de prioridad y estado
                         $priority_icon = get_priority_icon($row['Prioridad']);
                         $status_icon = get_status_icon($row['Estado_tarea']);
-                        echo "<tr>
+                        $row_class = $row['Estado_tarea'] === 'Anulada' ? 'row-anulada' : '';
+
+                        // Botones de acción
+                        $acciones = $row['Estado_tarea'] === 'Anulada' ? 
+                            "<button class='btn btn-anular btn-sm' disabled><i class='fas fa-ban'></i> Anular</button>" : 
+                            "<a href='editar_tarea.php?id={$row['Idtarea']}' class='btn btn-warning btn-sm'><i class='fas fa-edit'></i> Editar</a>
+                             <a href='?anular_tarea={$row['Idtarea']}' class='btn btn-anular btn-sm' onclick='return confirmarAnulacion()'><i class='fas fa-ban'></i> Anular</a>";
+
+                        echo "<tr class='$row_class'>
                                 <td>{$row['Idtarea']}</td>
                                 <td>{$row['Descripcion']}</td>
                                 <td>{$row['Fecha_inicio']}</td>
@@ -220,16 +131,14 @@ if (isset($_GET['eliminar_tarea'])) {
                                 <td>{$row['Fecha_creacion']}</td>
                                 <td>{$priority_icon} {$row['Prioridad']}</td>
                                 <td>{$status_icon} {$row['Estado_tarea']}</td>
+                                <td>{$row['NombreCreador']}</td>
                                 <td>{$row['NombreResponsable']}</td>
                                 <td>{$row['NombreProyecto']}</td>
-                                <td>
-                                    <a href='editar_tarea.php?id={$row['Idtarea']}' class='btn btn-warning btn-sm'><i class='fas fa-edit'></i> Editar</a>
-                                    <a href='eliminar_tarea.php?id={$row['Idtarea']}' class='btn btn-danger btn-sm' onclick='return confirmarEliminacion()'><i class='fas fa-trash'></i> Eliminar</a>
-                                </td>
+                                <td>$acciones</td>
                               </tr>";
                     }
                 } else {
-                    echo "<tr><td colspan='10'>No hay tareas registradas</td></tr>";
+                    echo "<tr><td colspan='11'>No hay tareas registradas</td></tr>";
                 }
                 $conn->close();
                 ?>
@@ -241,14 +150,15 @@ if (isset($_GET['eliminar_tarea'])) {
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
-            function confirmarEliminacion() {
-        return confirm('¿Estás seguro de que deseas eliminar esta tarea? Esta acción no se puede deshacer.');
-    }
-</script>
+        function confirmarAnulacion() {
+            return confirm('¿Estás seguro de que deseas anular esta tarea? Esta acción no se puede deshacer.');
+        }
+    </script>
 </body>
 </html>
+
 <?php
-// Función para obtener el icono de prioridad
+// Funciones para los iconos
 function get_priority_icon($prioridad) {
     switch ($prioridad) {
         case 'Alta':
@@ -262,7 +172,6 @@ function get_priority_icon($prioridad) {
     }
 }
 
-// Función para obtener el icono de estado de la tarea
 function get_status_icon($estado_tarea) {
     switch ($estado_tarea) {
         case 'En Proceso':
@@ -271,6 +180,8 @@ function get_status_icon($estado_tarea) {
             return '<i class="fas fa-check status-completed icon"></i>';
         case 'Pendiente':
             return '<i class="far fa-clock status-pending icon"></i>';
+        case 'Anulada':
+            return '<i class="fas fa-ban status-anulada icon"></i>';
         default:
             return '';
     }
