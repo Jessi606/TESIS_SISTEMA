@@ -5,26 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restablecer Contraseña</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
         body {
             background-color: #a6bbd7;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
-            justify-content: center; /* Centra horizontalmente */
-            align-items: center; /* Centra verticalmente */
+            justify-content: center;
+            align-items: center;
             height: 100vh;
             margin: 0;
-            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         .container-reset {
-            width: 100%;
             max-width: 400px;
             padding: 2rem;
             background-color: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
             text-align: center;
         }
         .message {
@@ -34,18 +30,12 @@
             border-radius: 8px;
         }
         .error-message {
-            background-color: #f8d7da; /* Rojo */
-            border-color: #f5c6cb;
+            background-color: #f8d7da;
             color: #721c24;
         }
         .success-message {
-            background-color: #d4edda; /* Verde */
-            border-color: #c3e6cb;
+            background-color: #d4edda;
             color: #155724;
-        }
-        .btn-group {
-            display: flex;
-            gap: 10px; /* Espacio entre botones */
         }
     </style>
 </head>
@@ -54,21 +44,47 @@
     // Incluir el archivo de conexión
     include 'php/conexion.php';
 
-    // Definir variables para mensajes
+    // Definir mensajes
     $error_message = '';
     $success_message = '';
+    $show_reset_form = false;
+    $id_usuario = null;
+    $current_password = '';
 
-    // Verificar si se ha enviado el formulario
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        // Obtener datos del formulario
-        $new_password = $_POST['new_password'];
-        $confirm_password = $_POST['confirm_password'];
+    // Paso 1: Verificar el nombre de usuario
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_user'])) {
+        $nombre = $_POST['nombre'];
 
         // Conectar a la base de datos
         $conn = conectarDB();
 
-        // Obtener el ID del usuario (debes ajustar esta parte según tu aplicación)
-        $id_usuario = 1; // Aquí deberías obtener el ID de usuario correspondiente
+        // Buscar el usuario en la base de datos usando el campo Nombre
+        $sql = "SELECT IDusuario, Password FROM usuarios WHERE Nombre = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $nombre);
+        $stmt->execute();
+        $stmt->bind_result($id_usuario, $current_password);
+        
+        if ($stmt->fetch()) {
+            // Usuario encontrado, mostrar formulario de restablecimiento de contraseña
+            $show_reset_form = true;
+        } else {
+            // Usuario no encontrado
+            $error_message = 'Nombre de usuario no encontrado.';
+        }
+        
+        $stmt->close();
+        $conn->close();
+    }
+
+    // Paso 2: Restablecer la contraseña si el nombre de usuario es válido
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['reset_password']) && !empty($_POST['id_usuario'])) {
+        $new_password = $_POST['new_password'];
+        $confirm_password = $_POST['confirm_password'];
+        $id_usuario = $_POST['id_usuario'];
+
+        // Conectar a la base de datos
+        $conn = conectarDB();
 
         // Obtener la contraseña actual del usuario
         $sql = "SELECT Password FROM usuarios WHERE IDusuario = ?";
@@ -79,119 +95,62 @@
         $stmt->fetch();
         $stmt->close();
 
-        // Verificar que las contraseñas coincidan
         if ($new_password !== $confirm_password) {
             $error_message = 'Las contraseñas no coinciden.';
         } elseif ($new_password === $current_password) {
-            $error_message = 'La nueva contraseña no puede ser la misma que la contraseña actual.';
+            $error_message = 'La nueva contraseña no puede ser la misma que la contraseña actual. Por favor, elige una diferente.';
         } else {
-            // Actualizar la contraseña en la base de datos
+            // Actualizar la contraseña en la base de datos sin encriptación
             $sql = "UPDATE usuarios SET Password = ? WHERE IDusuario = ?";
             $stmt = $conn->prepare($sql);
-
-            if ($stmt === false) {
-                die('Error al preparar la consulta: ' . $conn->error);
-            }
-
             $stmt->bind_param("si", $new_password, $id_usuario);
 
             if ($stmt->execute()) {
-                $success_message = '¡Contraseña reseteada con éxito!';
-                echo "<script>
-                        setTimeout(function(){
-                            window.location.href = 'index.php';
-                        }, 3000);
-                      </script>";
+                $success_message = '¡Contraseña restablecida con éxito!';
             } else {
-                $error_message = 'Error al actualizar la contraseña: ' . $conn->error;
+                $error_message = 'Error al actualizar la contraseña.';
             }
 
             $stmt->close();
-            $conn->close();
         }
+        $conn->close();
     }
     ?>
 
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="container-reset">
-                    <h2 class="h4 font-weight-bold text-theme mb-4 text-center">Restablecer Contraseña</h2>
-                    <?php if (!empty($error_message)) : ?>
-                        <div class="message error-message">
-                            <?php echo $error_message; ?>
-                        </div>
-                    <?php endif; ?>
-                    <?php if (!empty($success_message)) : ?>
-                        <div class="message success-message">
-                            <?php echo $success_message; ?>
-                        </div>
-                    <?php endif; ?>
-                    <!-- Formulario de reseteo de contraseña -->
-                    <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="POST" onsubmit="return validateForm()">
-                        <div class="form-group">
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text"><i class="fa fa-lock"></i></span>
-                                </div>
-                                <input type="password" name="new_password" id="new_password" class="form-control" placeholder="Nueva Contraseña" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text"><i class="fa fa-lock"></i></span>
-                                </div>
-                                <input type="password" name="confirm_password" id="confirm_password" class="form-control" placeholder="Confirmar Contraseña" required>
-                            </div>
-                            <span id="error_message" class="error-message"></span>
-                        </div>
-                        <div class="form-group btn-group">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-key"></i> Restablecer
-                            </button>
-                            <a href="index.php" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Volver al login
-                            </a>
-                        </div>
-                    </form>
+    <div class="container-reset">
+        <h2>Restablecer Contraseña</h2>
+
+        <?php if (!empty($error_message)) : ?>
+            <div class="message error-message"><?php echo $error_message; ?></div>
+        <?php endif; ?>
+
+        <?php if (!empty($success_message)) : ?>
+            <div class="message success-message"><?php echo $success_message; ?></div>
+        <?php endif; ?>
+
+        <?php if (!$show_reset_form) : ?>
+            <!-- Formulario para ingresar el nombre de usuario -->
+            <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="POST">
+                <div class="form-group">
+                    <input type="text" name="nombre" class="form-control" placeholder="Nombre de usuario" required>
                 </div>
-            </div>
-        </div>
+                <button type="submit" name="check_user" class="btn btn-primary">Verificar Usuario</button>
+                <a href="index.php" class="btn btn-primary mt-4"><i class="fas fa-arrow-left"></i> Volver a la página anterior</a>
+            </form>
+        <?php else : ?>
+            <!-- Formulario para restablecer la contraseña -->
+            <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="POST">
+                <input type="hidden" name="id_usuario" value="<?php echo htmlspecialchars($id_usuario); ?>">
+                <div class="form-group">
+                    <input type="password" name="new_password" class="form-control" placeholder="Nueva Contraseña" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" name="confirm_password" class="form-control" placeholder="Confirmar Contraseña" required>
+                </div>
+                <button type="submit" name="reset_password" class="btn btn-primary">Restablecer Contraseña</button>
+                <a href="index.php" class="btn btn-primary mt-4"><i class="fas fa-arrow-left"></i> Volver a la página anterior</a>
+            </form>
+        <?php endif; ?>
     </div>
-
-    <!-- Bootstrap JS y dependencias -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script>
-    function validateForm() {
-        var new_password = document.getElementById('new_password').value;
-        var confirm_password = document.getElementById('confirm_password').value;
-        var error_message = document.getElementById('error_message');
-        var current_password = "password_actual";  // Reemplaza con la contraseña actual obtenida
-
-        if (new_password !== confirm_password) {
-            error_message.textContent = 'Las contraseñas no coinciden.';
-            document.getElementById('new_password').value = '';
-            document.getElementById('confirm_password').value = '';
-            setTimeout(function() {
-                error_message.textContent = '';
-            }, 3000); // Limpia el mensaje después de 3 segundos
-            return false;
-        } else if (new_password === current_password) {
-            error_message.textContent = 'La nueva contraseña no puede ser la misma que la contraseña actual.';
-            document.getElementById('new_password').value = '';
-            document.getElementById('confirm_password').value = '';
-            setTimeout(function() {
-                error_message.textContent = '';
-            }, 3000); // Limpia el mensaje después de 3 segundos
-            return false;
-        } else {
-            error_message.textContent = '';
-            return true; // Permitir que el formulario se envíe si las contraseñas coinciden
-        }
-    }
-    </script>
 </body>
 </html>

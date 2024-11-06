@@ -20,10 +20,6 @@ $sql_proyectos_en_proceso = "SELECT * FROM proyecto_auditoria WHERE Estado = 'En
 $result_proyectos_en_proceso = $conn->query($sql_proyectos_en_proceso);
 $totalProyectosEnProceso = $result_proyectos_en_proceso->num_rows;
 
-$sql_proyectos_cancelados = "SELECT * FROM proyecto_auditoria WHERE Estado = 'Cancelado'";
-$result_proyectos_cancelados = $conn->query($sql_proyectos_cancelados);
-$totalProyectosCancelados = $result_proyectos_cancelados->num_rows;
-
 // Consultas para tareas
 $sql_tareas_pendientes = "SELECT * FROM tareas WHERE Estado_tarea = 'Pendiente'";
 $result_tareas_pendientes = $conn->query($sql_tareas_pendientes);
@@ -137,58 +133,6 @@ $conn->close();
         </header>
         <h2 class="display-4">Tarjetas de Detalle</h2>
         <div class="row">
-            <!-- Columna de Tareas -->
-            <div class="col-md-4">
-                <div class="card card-custom bg-custom-info mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title">Tareas Pendientes</h5>
-                        <ul class="list-unstyled">
-                            <?php
-                            if ($totalTareasPendientes > 0) {
-                                while($row = $result_tareas_pendientes->fetch_assoc()) {
-                                    echo "<li>" . $row["Descripcion"] . " - Estado: " . $row["Estado_tarea"] . "</li>";
-                                }
-                            } else {
-                                echo "<li>No hay tareas pendientes</li>";
-                            }
-                            ?>
-                        </ul>
-                    </div>
-                </div>
-                <div class="card card-custom bg-custom-danger mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title">Tareas en Progreso</h5>
-                        <ul class="list-unstyled">
-                            <?php
-                            if ($totalTareasEnProceso > 0) {
-                                while($row = $result_tareas_en_proceso->fetch_assoc()) {
-                                    echo "<li>" . $row["Descripcion"] . " - Estado: " . $row["Estado_tarea"] . "</li>";
-                                }
-                            } else {
-                                echo "<li>No hay tareas en proceso</li>";
-                            }
-                            ?>
-                        </ul>
-                    </div>
-                </div>
-                <div class="card card-custom bg-custom-success mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title">Tareas Completadas</h5>
-                        <ul class="list-unstyled">
-                            <?php
-                            if ($totalTareasCompletadas > 0) {
-                                while($row = $result_tareas_completadas->fetch_assoc()) {
-                                    echo "<li>" . $row["Descripcion"] . " - Estado: " . $row["Estado_tarea"] . "</li>";
-                                }
-                            } else {
-                                echo "<li>No hay tareas completadas</li>";
-                            }
-                            ?>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
             <!-- Columna de Proyectos -->
             <div class="col-md-4">
                 <div class="card card-custom bg-custom-info mb-4">
@@ -239,17 +183,53 @@ $conn->close();
                         </ul>
                     </div>
                 </div>
-                <div class="card card-custom bg-custom-primary mb-4">
+            </div>
+
+           <!-- Columna de Tareas -->
+            <div class="col-md-4">
+                <div class="card card-custom bg-custom-info mb-4">
                     <div class="card-body">
-                        <h5 class="card-title">Proyectos Cancelados</h5>
+                        <h5 class="card-title">Tareas Pendientes</h5>
                         <ul class="list-unstyled">
                             <?php
-                            if ($totalProyectosCancelados > 0) {
-                                while($row = $result_proyectos_cancelados->fetch_assoc()) {
-                                    echo "<li>" . $row["Descripcion"] . " - Estado: " . $row["Estado"] . "</li>";
+                            if ($totalTareasPendientes > 0) {
+                                while($row = $result_tareas_pendientes->fetch_assoc()) {
+                                    echo "<li>" . $row["Descripcion"] . " - Estado: " . $row["Estado_tarea"] . "</li>";
                                 }
                             } else {
-                                echo "<li>No hay proyectos cancelados</li>";
+                                echo "<li>No hay tareas pendientes</li>";
+                            }
+                            ?>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card card-custom bg-custom-danger mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Tareas en Progreso</h5>
+                        <ul class="list-unstyled">
+                            <?php
+                            if ($totalTareasEnProceso > 0) {
+                                while($row = $result_tareas_en_proceso->fetch_assoc()) {
+                                    echo "<li>" . $row["Descripcion"] . " - Estado: " . $row["Estado_tarea"] . "</li>";
+                                }
+                            } else {
+                                echo "<li>No hay tareas en proceso</li>";
+                            }
+                            ?>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card card-custom bg-custom-success mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Tareas Completadas</h5>
+                        <ul class="list-unstyled">
+                            <?php
+                            if ($totalTareasCompletadas > 0) {
+                                while($row = $result_tareas_completadas->fetch_assoc()) {
+                                    echo "<li>" . $row["Descripcion"] . " - Estado: " . $row["Estado_tarea"] . "</li>";
+                                }
+                            } else {
+                                echo "<li>No hay tareas completadas</li>";
                             }
                             ?>
                         </ul>
@@ -320,14 +300,14 @@ $conn->close();
         </div> <!-- Cierre del div container -->
 
         <script>
-        // Datos para el gráfico de proyectos
+        // Datos para el gráfico de proyectos sin la categoría de cancelados
         const proyectosData = {
-            labels: ['Pendientes', 'En Progreso', 'Completados', 'Cancelados'],
+            labels: ['Pendientes', 'En Progreso', 'Completados'],
             datasets: [{
                 label: 'Proyectos',
-                data: [<?php echo $totalProyectosPendientes; ?>, <?php echo $totalProyectosEnProceso; ?>, <?php echo $totalProyectosFinalizados; ?>, <?php echo $totalProyectosCancelados; ?>],
-                backgroundColor: ['#FF9999', '#FDFD96', '#C9E2AE', '#FFB6C1'],
-                borderColor: ['#FF9999', '#FDFD96', '#C9E2AE', '#FFB6C1'],
+                data: [<?php echo $totalProyectosPendientes; ?>, <?php echo $totalProyectosEnProceso; ?>, <?php echo $totalProyectosFinalizados; ?>],
+                backgroundColor: ['#FF9999', '#FDFD96', '#C9E2AE'],
+                borderColor: ['#FF9999', '#FDFD96', '#C9E2AE'],
                 borderWidth: 1
             }]
         };
@@ -368,7 +348,6 @@ $conn->close();
                     },
                     title: {
                         display: true,
-                        
                     }
                 }
             }
@@ -386,7 +365,6 @@ $conn->close();
                     },
                     title: {
                         display: true,
-                        
                     }
                 }
             }
@@ -404,7 +382,6 @@ $conn->close();
                     },
                     title: {
                         display: true,
-                        
                     }
                 }
             }

@@ -128,7 +128,7 @@ $query = mysqli_query($con, $sql);
     </style>
     <script>
         function confirmarEliminacion() {
-            return confirm("¿Estás seguro de que deseas eliminar este requerimiento?");
+            return confirm("¿Estás seguro de que deseas anular este requerimiento?");
         }
 
         function solicitarComentario(id) {

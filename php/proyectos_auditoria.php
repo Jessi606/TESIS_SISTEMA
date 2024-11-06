@@ -92,18 +92,15 @@ if (isset($_GET['anular'])) {
             background-color: #f8f9fa;
         }
 
-        /* Fila desactivada para proyectos anulados */
         .row-disabled {
             background-color: #c4c8cc !important;
             color: #5a5c5e;
         }
 
-        /* Texto más oscuro en filas habilitadas */
         .table .enabled-row {
             color: #1b1e21;
         }
 
-        /* Estilos para el botón "Anular" */
         .btn-anular {
             background-color: #f8d7da;
             color: #dc3545;
@@ -121,6 +118,11 @@ if (isset($_GET['anular'])) {
             color: #dc3545;
         }
     </style>
+    <script>
+        function confirmAnular() {
+            return confirm("¿Estás seguro de que deseas anular este proyecto?");
+        }
+    </script>
 </head>
 <body>
 <div class="container">
@@ -158,8 +160,8 @@ if (isset($_GET['anular'])) {
 
                 // Botón de anular completamente deshabilitado si el estado es "Anulado"
                 $botonAnular = $isAnulado 
-                    ? "<button class='btn btn-anular btn-sm' disabled><i class='fas fa-ban'></i> Anular</button>"
-                    : "<a href='?anular={$row['Idproyecto']}' class='btn btn-anular btn-sm'><i class='fas fa-ban'></i> Anular</a>";
+                    ? "<button class='btn btn-anular btn-sm' disabled><i class='fas fa-ban'></i> Anulado</button>"
+                    : "<a href='?anular={$row['Idproyecto']}' class='btn btn-anular btn-sm' onclick='return confirmAnular();'><i class='fas fa-ban'></i> Anular</a>";
 
                 // Botones de acción
                 $acciones = $isAnulado ? $botonAnular : "
