@@ -100,9 +100,8 @@ if (!$conn) {
 
     <div class="d-flex mb-3">
         <a href="agregar_cliente.php" class="btn btn-primary"><i class="fas fa-user-plus"></i> Agregar</a>
-        <a href="/TESIS_SISTEMA/manuales_usuario/Gestión de usuarios-Clientes.pdf" target="_blank" class="btn btn-secondary ml-2"><i class="fas fa-question-circle"></i> Ayuda</a>
-    </div>
-
+        <a href="/TESIS_SISTEMA/Manuales de usuario/Gestión de Usuarios_clientes_actualizado.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
+     </div>
     <h2 class="mt-3">Clientes Registrados</h2>
     <table class="table table-striped mt-3">
         <thead>

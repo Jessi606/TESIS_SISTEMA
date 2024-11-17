@@ -74,8 +74,8 @@ if (isset($_GET['success']) && $_GET['success'] === 'anulado') {
 
     <div class="d-flex justify-content-start mb-3">
         <a href="agregar_auditor.php" class="btn btn-primary mr-2"><i class="fas fa-user-plus"></i> Agregar</a>
-        <a href="/TESIS_SISTEMA/manuales_usuario/Gestión de usuarios-auditores.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
-    </div>
+        <a href="/TESIS_SISTEMA/Manuales de usuario/Gestión de Usuarios_auditores_actualizado.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
+     </div>
 
     <h2 class="mt-3">Auditores Registrados</h2>
     <table class="table table-striped mt-3">

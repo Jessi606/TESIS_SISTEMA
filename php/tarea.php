@@ -90,7 +90,7 @@ $result = $conn->query($sql);
         <div class="button-group">
             <a href="agregar_tarea.php" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar Tarea</a>
             <a href="registro_auditoria.php" class="btn btn-info"><i class="fas fa-file-alt"></i> Ver Registro de Auditoría</a>
-            <a href="/TESIS_SISTEMA/manuales_usuario/Gestión de Auditoría-Tareas.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
+            <a href="/TESIS_SISTEMA/Manuales de usuario/Gestión de Auditoría_tareas_actualizado.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
         </div>
         <h2 class="mt-3">Tareas Registradas</h2>
         <table class="table table-striped mt-3">

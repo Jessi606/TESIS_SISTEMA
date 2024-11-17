@@ -149,8 +149,8 @@ $query = mysqli_query($con, $sql);
         <form action="crear_requerimiento.php" method="GET" class="mb-4 d-flex align-items-start">
             <button type="submit" class="btn btn-primary mr-2"><i class="fas fa-plus"></i> Agregar Requerimiento</button>
             <a href="registro_audit_requerimiento.php" class="btn btn-secondary mr-2"><i class="fas fa-file-alt"></i> Ver Registro de Auditoría</a>
-            <a href="/TESIS_SISTEMA/manuales_usuario/Gestión de Auditoría-Requerimiento.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
-        </form>
+            <a href="/TESIS_SISTEMA/Manuales de usuario/Gestión de Auditoría_requerimientos_actualizado.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
+            </form>
         <div>
             <h2>Requerimientos Registrados</h2>
             <table class="table table-bordered table-striped">

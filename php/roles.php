@@ -73,7 +73,7 @@ $query = mysqli_query($con, $sql);
                 <input type="text" name="Descripcion" class="form-control" placeholder="Descripción">
             </div>
             <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar</button>
-            <a href="/TESIS_SISTEMA/manuales_usuario/Gestión de Roles.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
+            <a href="/TESIS_SISTEMA/Manuales de usuario/Gestión de Usuarios_roles_actualizado.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
         </form>
 
         <!-- Mostrar el mensaje de éxito si el rol fue anulado -->

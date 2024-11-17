@@ -131,7 +131,7 @@ if (isset($_GET['anular'])) {
         <div class="d-flex">
             <a href="agregar_proyecto.php" class="btn btn-primary mr-2"><i class="fas fa-plus"></i> Agregar</a>
             <a href="auditoria_proyectos.php" class="btn btn-info mr-2"><i class="fas fa-file-alt"></i> Ver Registro de Auditoría</a>
-            <a href="/TESIS_SISTEMA/manuales_usuario/Gestión de Auditoría-Proyecto Auditoria.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
+            <a href="/TESIS_SISTEMA/Manuales de usuario/Gestión de Auditoría_proyectos_actualizado.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
         </div>
     </div>
     <h2 class="mt-3">Proyectos Registrados</h2>

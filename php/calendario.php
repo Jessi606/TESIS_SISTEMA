@@ -215,7 +215,7 @@ unset($_SESSION['error_message']);
         <a href="ver_detalles_eventos.php" class="btn btn-custom-info ml-2">
             <i class="fas fa-info-circle"></i> Ver Detalles de Eventos
         </a>
-        <a href="/TESIS_SISTEMA/manuales_usuario/Gestión de Agenda – Calendario de Eventos.pdf" target="_blank" class="btn btn-custom-secondary">
+        <a href="/TESIS_SISTEMA/Manuales de usuario/Gestión de Agenda_calendario_actualizado.pdf" target="_blank" class="btn btn-custom-secondary">
             <i class="fas fa-question-circle"></i> Ayuda
         </a>    
     </div>

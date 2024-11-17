@@ -87,8 +87,8 @@ $query = mysqli_query($con, $sql);
                 <input type="text" name="Nombre" class="form-control" placeholder="Nombre de la ciudad" required>
             </div>
             <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar</button>
-            <a href="/TESIS_SISTEMA/manuales_usuario/Gestión de Usuarios-Ciudades.pdf" target="_blank" class="btn btn-secondary">
-                <i class="fas fa-question-circle"></i> Ayuda
+            <a href="/TESIS_SISTEMA/Manuales de usuario/Gestión de Usuarios_ciudades_actualizado.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
+           
             </a>
         </form>
 

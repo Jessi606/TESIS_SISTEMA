@@ -106,7 +106,7 @@
                     ?>
                     <div class="title-container">
                         <h1>Bienvenido/a, <?php echo $nombreUsuario; ?></h1>
-                        <a href="ayuda.php" class="btn-help" title="Ayuda">
+                        <a href="/TESIS_SISTEMA/Manuales de usuario/Manual de Usuario General.pdf" class="btn-help" title="Ayuda">
                             <i class="fas fa-question-circle help-icon"></i>
                             <span>Ayuda</span>
                         </a>
