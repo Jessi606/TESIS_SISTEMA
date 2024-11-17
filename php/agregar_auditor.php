@@ -10,8 +10,8 @@ if (!$conn) {
     die("Error al conectar a la base de datos: " . mysqli_connect_error());
 }
 
-// Obtener la lista de usuarios auditores
-$usuarios_auditores_sql = "SELECT IDusuario, Nombre FROM usuarios WHERE IDrol = 2"; // Filtrar solo los usuarios con el ID de rol de auditor (en este caso, 2)
+// Obtener la lista de usuarios auditores activos
+$usuarios_auditores_sql = "SELECT IDusuario, Nombre FROM usuarios WHERE IDrol = 2 AND Estado = 1"; // Filtrar solo los usuarios con el rol de auditor (IDrol = 2) y que estén activos (Estado = 1)
 $usuarios_auditores_result = $conn->query($usuarios_auditores_sql);
 ?>
 
@@ -129,7 +129,7 @@ $usuarios_auditores_result = $conn->query($usuarios_auditores_sql);
                         echo "<option value='{$usuario['IDusuario']}'>{$usuario['Nombre']}</option>";
                     }
                 } else {
-                    echo "<option value=''>No hay usuarios auditores disponibles</option>";
+                    echo "<option value=''>No hay usuarios auditores activos disponibles</option>";
                 }
                 ?>
             </select>

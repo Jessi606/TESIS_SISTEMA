@@ -1,21 +1,18 @@
 <?php
-// Incluir el archivo de conexión a la base de datos
 include('conexion.php');
 
-// Establecer la conexión a la base de datos
 $conn = conectarDB();
 
-// Verificar la conexión
 if (!$conn) {
     die("Error al conectar a la base de datos.");
 }
 
 // Mensajes de éxito o error
 $mensaje = '';
-if (isset($_GET['success']) && $_GET['success'] == 1) {
-    $mensaje = "<div class='alert alert-success'>Auditor eliminado exitosamente.</div>";
+if (isset($_GET['success']) && $_GET['success'] === 'anulado') {
+    $mensaje = "<div class='alert alert-success' id='success-message'>Auditor anulado exitosamente.</div>";
 } elseif (isset($_GET['error']) && $_GET['error'] == 1) {
-    $mensaje = "<div class='alert alert-danger'>Error al eliminar el auditor.</div>";
+    $mensaje = "<div class='alert alert-danger' id='error-message'>Error al anular el auditor.</div>";
 }
 ?>
 
@@ -60,18 +57,24 @@ if (isset($_GET['success']) && $_GET['success'] == 1) {
         .table td {
             background-color: #f8f9fa;
         }
+        /* Estilos para deshabilitar filas anuladas */
+        .disabled-row {
+            background-color: #e9ecef !important;
+            color: #6c757d;
+            pointer-events: none; /* Desactiva eventos en la fila */
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1 class="mt-5">Registrar de Auditores</h1>
+    <h1 class="mt-5">Registro de Auditores</h1>
 
     <!-- Mostrar mensaje de éxito o error -->
     <?= $mensaje ?>
 
     <div class="d-flex justify-content-start mb-3">
         <a href="agregar_auditor.php" class="btn btn-primary mr-2"><i class="fas fa-user-plus"></i> Agregar</a>
-        <a href="/TESIS_SISTEMA/manuales_usuario/Gestión de usuarios-Auditores.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
+        <a href="/TESIS_SISTEMA/manuales_usuario/Gestión de usuarios-auditores.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
     </div>
 
     <h2 class="mt-3">Auditores Registrados</h2>
@@ -86,14 +89,15 @@ if (isset($_GET['success']) && $_GET['success'] == 1) {
             <th>Fecha de Nacimiento</th>
             <th>Nivel de Experiencia</th>
             <th>Usuario Asignado</th>
+            <th>Estado</th>
             <th>Acciones</th>
         </tr>
         </thead>
         <tbody>
         <?php
-        // Consulta SQL para obtener los datos de auditores y usuarios
+        // Consulta para obtener todos los auditores con su estado
         $sql = "SELECT auditores.Idauditor, auditores.Nombre, auditores.Apellido, auditores.Telefono, auditores.Email, 
-                auditores.FechaNacimiento, auditores.NivelExperiencia, usuarios.Nombre AS Usuario
+                auditores.FechaNacimiento, auditores.NivelExperiencia, usuarios.Nombre AS Usuario, auditores.estado
                 FROM auditores
                 LEFT JOIN usuarios ON auditores.IDusuario = usuarios.IDusuario
                 ORDER BY FIELD(auditores.NivelExperiencia, 'Gerente', 'Senior', 'Junior')";
@@ -102,7 +106,14 @@ if (isset($_GET['success']) && $_GET['success'] == 1) {
 
         if ($result && $result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
-                echo "<tr>
+                $row_class = $row['estado'] === 'anulado' ? 'disabled-row' : '';
+                $acciones = $row['estado'] === 'activo' ? "
+                    <a href='editar_auditor.php?id=" . htmlspecialchars($row['Idauditor']) . "' class='btn btn-warning btn-sm'><i class='fas fa-edit'></i> Editar</a>
+                    <a href='anular_auditor.php?id=" . htmlspecialchars($row['Idauditor']) . "' class='btn btn-sm btn-danger' onclick='return confirmAnular();'>
+                        <i class='fas fa-ban'></i> Anular
+                    </a>" : "<span class='text-muted'>No disponible</span>";
+
+                echo "<tr class='$row_class'>
                         <td>" . htmlspecialchars($row['Idauditor']) . "</td>
                         <td>" . htmlspecialchars($row['Nombre']) . "</td>
                         <td>" . htmlspecialchars($row['Apellido']) . "</td>
@@ -111,18 +122,12 @@ if (isset($_GET['success']) && $_GET['success'] == 1) {
                         <td>" . htmlspecialchars($row['FechaNacimiento']) . "</td>
                         <td>" . htmlspecialchars($row['NivelExperiencia']) . "</td>
                         <td>" . htmlspecialchars($row['Usuario']) . "</td>
-                        <td>
-                            <a href='editar_auditor.php?id=" . htmlspecialchars($row['Idauditor']) . "' class='btn btn-warning btn-sm'><i class='fas fa-edit'></i> Editar</a>
-                            <a href='eliminar_auditor.php?id=" . htmlspecialchars($row['Idauditor']) . "' 
-                               class='btn btn-sm btn-danger' 
-                               onclick='return confirmDelete();'>
-                                <i class='fas fa-trash'></i> Eliminar
-                            </a>
-                        </td>
+                        <td>" . htmlspecialchars($row['estado']) . "</td>
+                        <td>$acciones</td>
                     </tr>";
             }
         } else {
-            echo "<tr><td colspan='9' class='text-center'>No hay auditores registrados.</td></tr>";
+            echo "<tr><td colspan='10' class='text-center'>No hay auditores registrados.</td></tr>";
         }
         ?>  
         </tbody>
@@ -130,21 +135,30 @@ if (isset($_GET['success']) && $_GET['success'] == 1) {
     <a href="admin.php" class="btn btn-primary"><i class="fas fa-arrow-left"></i> Volver a la página principal</a>
 </div>
 
-<!-- Integra Bootstrap JS (opcional, si es necesario) -->
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-<!-- Función de confirmación para eliminar -->
 <script>
-    function confirmDelete() {
-        return confirm('¿Estás seguro de que deseas eliminar este auditor? Esta acción no se puede deshacer.');
+    function confirmAnular() {
+        return confirm('¿Estás seguro de que deseas anular este auditor?');
     }
+
+    // Ocultar mensaje de éxito o error después de 5 segundos
+    setTimeout(function() {
+        var successMessage = document.getElementById("success-message");
+        var errorMessage = document.getElementById("error-message");
+        if (successMessage) {
+            successMessage.style.display = "none";
+        }
+        if (errorMessage) {
+            errorMessage.style.display = "none";
+        }
+    }, 5000);
 </script>
 </body>
 </html>
 
 <?php
-// Cerrar la conexión a la base de datos
 $conn->close();
 ?>

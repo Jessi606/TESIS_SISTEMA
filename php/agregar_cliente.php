@@ -10,12 +10,12 @@ if (!$conn) {
     die("Error al conectar a la base de datos: " . mysqli_connect_error());
 }
 
-// Obtener la lista de ciudades
-$ciudades_sql = "SELECT idciudad, nombre FROM ciudades";
+// Obtener la lista de ciudades activas
+$ciudades_sql = "SELECT idciudad, nombre FROM ciudades WHERE estado = 'activo'";
 $ciudades_result = $conn->query($ciudades_sql);
 
-// Obtener la lista de usuarios
-$usuarios_sql = "SELECT IDusuario, Nombre FROM usuarios WHERE IDrol = 3"; // Filtrar solo los usuarios con el ID de rol de cliente (en este caso, 3)
+// Obtener la lista de usuarios activos con rol de cliente
+$usuarios_sql = "SELECT IDusuario, Nombre FROM usuarios WHERE IDrol = 3 AND estado = 'activo'";
 $usuarios_result = $conn->query($usuarios_sql);
 
 // Procesar el formulario cuando se envía
@@ -62,7 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
     <style>
         body {
-            background-color:  #a6bbd7;
+            background-color: #a6bbd7;
         }
         .container {
             max-width: 600px;
@@ -109,7 +109,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             padding: 10px;
             border-radius: 5px;
             font-weight: bold;
-            text-align: center; /* Centrar el mensaje */
+            text-align: center;
         }
         .alert-success i {
             margin-right: 5px;
@@ -150,7 +150,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         echo "<option value='{$ciudad['idciudad']}'>{$ciudad['nombre']}</option>";
                     }
                 } else {
-                    echo "<option value=''>No hay ciudades disponibles</option>";
+                    echo "<option value=''>No hay ciudades activas disponibles</option>";
                 }
                 ?>
             </select>
@@ -164,7 +164,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         echo "<option value='{$usuario['IDusuario']}'>{$usuario['Nombre']}</option>";
                     }
                 } else {
-                    echo "<option value=''>No hay usuarios disponibles</option>";
+                    echo "<option value=''>No hay usuarios activos disponibles</option>";
                 }
                 ?>
             </select>

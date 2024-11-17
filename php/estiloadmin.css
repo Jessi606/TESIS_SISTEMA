@@ -1,185 +1,230 @@
 * {
     margin: 0;
     padding: 0;
+    outline: none;
+    border: none;
+    text-decoration: none;
     box-sizing: border-box;
-    font-family: sans-serif;
+    font-family:sans-serif;
 }
 
+  
 body {
     background: #a6bbd7;
 }
 
-.container {
+.container{
     display: flex;
 }
 
 nav {
+    position: relative;
+    top: 0;
+    bottom: 0;
     height: 100vh;
-    background: #2e3b4e;
-    width: 280px;
-    box-shadow: 0 20px 35px rgba(0, 0, 0, 0.1);
-    color: #fff;
+    left: 0;
+    background: #fff;
+    width: 350px;
+    overflow: hidden;
+    box-shadow: 0 20px 35px rgba(0, 0, 0, 0.904);
 }
 
 .logo {
     text-align: center;
+    display: flex;
+    align-items: center;
     padding: 20px;
 }
 
+
 .logo img {
-    width: 100px;
-    height: auto;
-    border-radius: 50%;
+    width: 252px;
+    height: 77px;
+    border-radius: 5px;
 }
 
 .nav-title {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: bold;
-    color: #fff;
-    text-align: center;
-    padding: 15px;
-}
-
-nav ul {
-    list-style: none;
-}
-
-nav ul li a {
-    color: #cfd8dc;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
     padding: 10px 20px;
+    color: #333; 
+}
+
+a {
+    position: relative;
+    color: rgb(85, 83, 83);
+    font-size: 18px;
+    display: table;
+    width: 280px;
+    padding: 10px;
+}
+
+nav .fas {
+    position: relative;
+    width: 70px;
+    height: 40px;
+    top: 14px;
+    font-size: 20px;
+    text-align: center;
+}
+
+.nav-item {
+    position: relative;
+    top: 12px;
+    margin-left: 10px;
+}
+
+a:hover {
+    background: #00BFFF;
+}
+  
+.logout{
+    position: absolute;
+    bottom: 0;
+}
+/* Estilo básico para el submenú */
+.submenu {
+    display: none;
+    position: absolute;
+    background-color: #fff; /* Fondo blanco */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra suave */
+    z-index: 1;
+}
+
+/* Estilo para mostrar el submenú cuando se pasa el mouse sobre el elemento padre */
+nav ul li:hover .submenu {
+    display: block;
+}
+
+/* Estilo para los elementos del submenú */
+.submenu li {
+    padding: 10px;
+}
+
+/* Estilo para los enlaces del submenú */
+.submenu a {
     text-decoration: none;
+    color: #333; /* Color del texto */
+    display: block;
 }
 
-nav ul li a:hover {
-    background: #1e88e5;
-    color: #fff;
-}
+/* Estilo para el hover de los enlaces del submenú */
+.submenu a:hover {
+    background-color: #87CEFA; /* Cambio de color de fondo al pasar el mouse */
+}  
 
-nav ul li a i {
-    margin-right: 10px;
-}
-
-section.main {
+/* Fondo principal */
+.main-background {
+    background: #a6bbd7;
+    padding: 50px;
     flex: 1;
-    padding: 20px;
-    background: #f4f7fa;
 }
 
-.main-header {
+.main-container {
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    padding: 30px;
+    max-width: 1700px; /* Reducido para ajustar mejor el ancho */
+    margin: 0 auto; /* Centrar horizontalmente */
+}
+
+/* Contenedor del título y botón de ayuda */
+.title-container {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    align-items: center; /* Alinea verticalmente los elementos */
+    justify-content: space-between; /* Espacio entre título y botón */
     margin-bottom: 20px;
 }
 
-.main-header h1 {
-    font-size: 24px;
-    color: #333;
-}
-
-/* Contenedor de iconos alineado horizontalmente */
-.top-icons {
-    display: flex;
-    align-items: center;
-    gap: 15px; /* Ajusta el espacio entre los íconos */
-}
-
-/* Estilos para los iconos */
-.user-icon, .help-icon {
-    font-size: 24px;
-    color: #007bff;
-    cursor: pointer;
-}
-
-.user-icon {
-    font-size: 24px;
-    color: #007bff;
-}
-
+/* Botón de ayuda */
 .btn-help {
     display: flex;
-    align-items: center;
-    font-size: 16px;
-    font-weight: bold;
-    color: #007bff;
+    align-items: center; /* Alinea el ícono y texto verticalmente */
+    color: #007bff; /* Color del texto */
+    font-size: 1rem;
     text-decoration: none;
+    gap: 5px;
+    padding: 5px;
+    background-color: transparent;
+    border: none;
+    margin-left: auto; /* Empuja el botón hacia el borde derecho */
 }
 
 .btn-help:hover {
     color: #0056b3;
+    background-color: transparent;
+    text-decoration: none;
 }
 
-.help-icon {
-    margin-right: 3px;
+/* Contenedor de eventos */
+.main-skills h3 {
+    font-size: 1.5rem;
+    margin-bottom: 20px; /* Espacio entre el título y las tarjetas */
+    color: #333;
 }
 
-/* Botón de calendario */
-.calendar-button {
-    margin-top: 20px;
+.events-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px; /* Espaciado entre las tarjetas */
+    justify-content: flex-start; /* Alineación inicial */
+}
+
+/* Tarjetas */
+.events-card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    width: 250px;
     text-align: center;
 }
 
-.btn-calendar {
-    padding: 10px 20px;
-    background: #ffc107;
-    color: #fff;
-    border-radius: 20px;
-    text-decoration: none;
+.events-header {
+    padding: 10px;
+    font-size: 1.5rem;
     font-weight: bold;
-    transition: background 0.3s;
+    color: white;
+    border-radius: 10px 10px 0 0;
+    background: linear-gradient(90deg, #a29bfe, #6c5ce7);
 }
 
-.btn-calendar:hover {
-    background: #e0a800;
-}
-
-/* Estilos para la tarjeta de eventos */
-.events-card {
-    background-color: #f9fafb;
+.events-content {
     padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.events-header h3 {
-    font-size: 18px;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 15px;
-}
-
-.events-list {
-    list-style: none;
-    padding: 0;
-}
-
-.event-item {
-    display: flex;
-    gap: 10px;
-    padding: 8px 0;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.event-item:last-child {
-    border-bottom: none;
-}
-
-.event-date {
-    font-weight: bold;
-    color: #007bff;
-    min-width: 70px;
 }
 
 .event-title {
+    font-size: 1.1rem;
+    font-weight: bold;
     color: #333;
+    margin-bottom: 10px;
 }
 
-.no-events {
-    text-align: center;
-    color: #666;
-    padding: 20px;
-    font-size: 16px;
+.event-date {
+    color: #007bff;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.event-date i {
+    color: orange;
+}
+
+/* Botón */
+.btn-calendar {
+    display: inline-block;
+    background: #00BFFF;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 1rem;
+    text-decoration: none;
+    margin-top: 30px; /* Espacio entre el botón y el contenido */
+}
+
+.btn-calendar:hover {
+    background: #007bbf;
 }

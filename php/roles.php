@@ -5,7 +5,6 @@ include('conexion.php');
 // Conectar a la base de datos
 $con = conectarDB();
 
-// Verificar la conexión
 if (!$con) {
     die("Error al conectar a la base de datos: " . mysqli_connect_error());
 }
@@ -58,6 +57,12 @@ $query = mysqli_query($con, $sql);
         .table td {
             background-color: #f8f9fa;
         }
+        /* Estilo para las filas de roles predeterminados y anulados */
+        .system-role, .disabled-role {
+            background-color: #e9ecef;
+            color: #6c757d;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -71,10 +76,10 @@ $query = mysqli_query($con, $sql);
             <a href="/TESIS_SISTEMA/manuales_usuario/Gestión de Roles.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
         </form>
 
-        <!-- Mostrar el mensaje de éxito si el rol fue eliminado -->
+        <!-- Mostrar el mensaje de éxito si el rol fue anulado -->
         <?php if (isset($_GET['success']) && $_GET['success'] == 1): ?>
-            <div class="alert alert-success">
-                El rol ha sido eliminado exitosamente.
+            <div class="alert alert-success" id="success-message">
+                El rol ha sido anulado exitosamente.
             </div>
         <?php endif; ?>
 
@@ -85,19 +90,30 @@ $query = mysqli_query($con, $sql);
                     <tr>
                         <th>Código</th>
                         <th>Descripción</th>
+                        <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php while ($row = mysqli_fetch_array($query)): ?>
-                        <tr>
-                            <td><?= $row['Idrol'] ?></td>
-                            <td><?= $row['Descripcion'] ?></td>
+                        <?php
+                        // Verificar si el rol es predeterminado o está anulado
+                        $isSystemRole = $row['Idrol'] <= 3;
+                        $isDisabledRole = $row['estado'] === 'anulado';
+                        ?>
+                        <tr class="<?= $isSystemRole ? 'system-role' : ($isDisabledRole ? 'disabled-role' : '') ?>">
+                            <td><?= htmlspecialchars($row['Idrol']) ?></td>
+                            <td><?= htmlspecialchars($row['Descripcion']) ?></td>
+                            <td><?= htmlspecialchars($row['estado']) ?></td>
                             <td>
-                                <a href="update_roles.php?Idrol=<?= $row['Idrol'] ?>" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i> Modificar</a>
-                                <a href="delete_roles.php?Idrol=<?= $row['Idrol'] ?>" 
-                                   class="btn btn-sm btn-danger"
-                                   onclick="return confirmDelete();"><i class="fas fa-trash"></i> Eliminar</a>
+                                <?php if (!$isSystemRole && !$isDisabledRole): ?>
+                                    <a href="update_roles.php?Idrol=<?= urlencode($row['Idrol']) ?>" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i> Modificar</a>
+                                    <a href="anular_rol.php?Idrol=<?= urlencode($row['Idrol']) ?>" 
+                                       class="btn btn-sm btn-danger"
+                                       onclick="return confirm('¿Estás seguro de que deseas anular este rol?');"><i class="fas fa-ban"></i> Anular</a>
+                                <?php else: ?>
+                                    <span class="text-muted"><?= $isSystemRole ? 'Predeterminado del sistema' : 'Anulado' ?></span>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endwhile; ?>
@@ -110,11 +126,14 @@ $query = mysqli_query($con, $sql);
     <!-- Integra Bootstrap JS (opcional, si es necesario) -->
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-    <!-- Función de confirmación para eliminar -->
+    <!-- Función para ocultar el mensaje de éxito después de unos segundos -->
     <script>
-        function confirmDelete() {
-            return confirm('¿Estás seguro de que deseas eliminar este rol? Esta acción no se puede deshacer.');
-        }
+        setTimeout(function() {
+            var successMessage = document.getElementById("success-message");
+            if (successMessage) {
+                successMessage.style.display = "none";
+            }
+        }, 5000); // 5000 ms = 5 segundos
     </script>
 </body>
 </html>

@@ -9,8 +9,7 @@
 <body>
     <div class="container">
         <!-- Menú de navegación -->
-         <!-- Menú de navegación -->
-         <nav>
+        <nav>
             <ul>
                 <li class="logo">
                     <img src="images/logo.jpg"> 
@@ -86,8 +85,10 @@
                 </li>
             </ul>
         </nav>
-        <section class="main">
-            <div class="card">
+        
+        <!-- Sección principal -->
+        <section class="main-background">
+            <div class="main-container">
                 <div class="main-top">
                     <?php
                     include_once 'conexion.php';
@@ -103,55 +104,58 @@
                         $nombreUsuario = "Usuario Desconocido";
                     }
                     ?>
-                    <h1>Bienvenido/a, <?php echo $nombreUsuario; ?></h1>
-                    <div class="top-icons">
-                        <i class="fas fa-user-cog user-icon" title="Configuración de Usuario"></i>
+                    <div class="title-container">
+                        <h1>Bienvenido/a, <?php echo $nombreUsuario; ?></h1>
                         <a href="ayuda.php" class="btn-help" title="Ayuda">
                             <i class="fas fa-question-circle help-icon"></i>
+                            <span>Ayuda</span>
                         </a>
                     </div>
                 </div>
 
                 <div class="main-skills">
-                    <!-- Sección de eventos -->
-                    <div class="events-card">
-                        <div class="events-header">
-                            <h3>Próximos Eventos</h3>
-                        </div>
-                        <div class="events-container">
-                            <ul class="events-list">
-                                <?php
-                                $queryEventos = "SELECT Nombre AS titulo, Fecha_evento FROM eventos WHERE Fecha_evento > NOW() ORDER BY Fecha_evento ASC LIMIT 5";
-                                $resultEventos = $conn->query($queryEventos);
+                    <h3>Próximos Eventos</h3>
+                    <div class="events-container">
+                        <?php
+                        // Configurar la localización para fechas en español
+                        setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain');
 
-                                if ($resultEventos->num_rows > 0) {
-                                    while ($evento = $resultEventos->fetch_assoc()) {
-                                        $fecha = date("d M", strtotime($evento['Fecha_evento']));
-                                        $titulo = $evento['titulo'];
+                        // Consulta de eventos
+                        $queryEventos = "SELECT Nombre AS titulo, Fecha_evento FROM eventos WHERE Fecha_evento > NOW() ORDER BY Fecha_evento ASC LIMIT 5";
+                        $resultEventos = $conn->query($queryEventos);
 
-                                        echo "
-                                        <li class='event-item'>
-                                            <span class='event-date'>$fecha</span>
-                                            <span class='event-title'>$titulo</span>
-                                        </li>";
-                                    }
-                                } else {
-                                    echo "<p class='no-events'><i class='fas fa-info-circle'></i> No hay próximos eventos registrados.</p>";
-                                }
+                        if ($resultEventos->num_rows > 0) {
+                            while ($evento = $resultEventos->fetch_assoc()) {
+                                // Obtener el mes y la fecha en español
+                                $mes = strtoupper(strftime("%B", strtotime($evento['Fecha_evento'])));
+                                $fechaCompleta = strftime("%d de %B de %Y, %H:%M", strtotime($evento['Fecha_evento']));
+                                $titulo = $evento['titulo'];
                                 ?>
-                            </ul>
-                        </div>
+                                <div class="events-card">
+                                    <div class="events-header"><?php echo $mes; ?></div>
+                                    <div class="events-content">
+                                        <h4 class="event-title"><?php echo $titulo; ?></h4>
+                                        <div class="event-date">
+                                            <i class="fas fa-clock"></i> <?php echo $fechaCompleta; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php
+                            }
+                        } else {
+                            echo "<p class='no-events'><i class='fas fa-info-circle'></i> No hay próximos eventos registrados.</p>";
+                        }
+                        ?>
                     </div>
 
-                    <!-- Botón para ir al calendario -->
                     <div class="calendar-button">
                         <a href="calendario.php" class="btn-calendar">
                             <i class="fas fa-calendar-alt"></i> Ir al Calendario
-                        </a>  
+                        </a>
                     </div>
                 </div>
             </div>
-        </section>
+        </section>  
     </div>
 </body>
 </html>

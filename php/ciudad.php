@@ -10,15 +10,15 @@ if (!$con) {
     die("Error al conectar a la base de datos: " . mysqli_connect_error());
 }
 
+// Verificar si hay un mensaje de anulación exitosa
+$mensaje = '';
+if (isset($_GET['status']) && $_GET['status'] == 'anulado') {
+    $mensaje = 'La ciudad se anuló exitosamente.';
+}
+
 // Consulta SQL para seleccionar todas las ciudades
 $sql = "SELECT * FROM ciudades";
 $query = mysqli_query($con, $sql);
-
-// Verificar si hay un mensaje de eliminación exitosa
-$mensaje = '';
-if (isset($_GET['status']) && $_GET['status'] == 'eliminado') {
-    $mensaje = 'La ciudad se eliminó exitosamente.';
-}
 ?>
 
 <!DOCTYPE html>
@@ -27,11 +27,8 @@ if (isset($_GET['status']) && $_GET['status'] == 'eliminado') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ciudades</title>
-    <!-- Integra Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Integra Font Awesome CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <!-- Estilos personalizados -->
     <style>
         body {
             background-color: #a6bbd7;
@@ -64,13 +61,18 @@ if (isset($_GET['status']) && $_GET['status'] == 'eliminado') {
         .table td {
             background-color: #f8f9fa;
         }
+        /* Estilos para las filas anuladas */
+        .anulado {
+            background-color: #f0e0e0; /* Cambia este color según tus preferencias */
+            color: #999;
+        }
     </style>
 </head>
 <body>
     <div class="container mt-5">
         <!-- Mostrar mensaje de éxito si existe -->
         <?php if ($mensaje): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <div class="alert alert-success alert-dismissible fade show" role="alert" id="success-message">
                 <?= $mensaje ?>
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
@@ -98,18 +100,24 @@ if (isset($_GET['status']) && $_GET['status'] == 'eliminado') {
                     <tr>
                         <th>ID Ciudad</th>
                         <th>Nombre</th>
+                        <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php while ($row = mysqli_fetch_array($query)): ?>
-                        <tr>
+                        <tr class="<?= $row['estado'] == 'anulado' ? 'anulado' : '' ?>">
                             <td><?= htmlspecialchars($row['Idciudad']) ?></td>
                             <td><?= htmlspecialchars($row['Nombre']) ?></td>
+                            <td><?= htmlspecialchars($row['estado']) ?></td>
                             <td>
-                                <a href="delete_ciudad.php?Idciudad=<?= urlencode($row['Idciudad']) ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de que deseas eliminar esta ciudad?');">
-                                    <i class="fas fa-trash"></i> Eliminar
-                                </a>
+                                <?php if ($row['estado'] == 'activo'): ?>
+                                    <a href="anular_ciudad.php?Idciudad=<?= urlencode($row['Idciudad']) ?>" class="btn btn-sm btn-warning" onclick="return confirm('¿Estás seguro de que deseas anular esta ciudad?');">
+                                        <i class="fas fa-ban"></i> Anular
+                                    </a>
+                                <?php else: ?>
+                                    <button class="btn btn-sm btn-secondary" disabled><i class="fas fa-ban"></i> Anulado</button>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endwhile; ?>
@@ -120,7 +128,18 @@ if (isset($_GET['status']) && $_GET['status'] == 'eliminado') {
         <a href="admin.php" class="btn btn-primary"><i class="fas fa-arrow-left"></i> Volver a la página principal</a>
     </div>
 
-    <!-- Integra Bootstrap JS (opcional, si es necesario) -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        // Ocultar el mensaje de éxito después de unos segundos
+        setTimeout(function() {
+            var successMessage = document.getElementById("success-message");
+            if (successMessage) {
+                successMessage.style.display = "none";
+            }
+        }, 5000); // 5000 ms = 5 segundos
+    </script>
 </body>
 </html>

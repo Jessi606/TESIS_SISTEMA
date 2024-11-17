@@ -64,16 +64,34 @@ if (!$conn) {
         .table td {
             background-color: #f8f9fa;
         }
+
+        /* Estilo para los clientes anulados */
+        .anulado {
+            background-color: #f0e68c; /* Color para destacar que está anulado */
+            color: #888;
+        }
+
+        .btn[disabled] {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <h1 class="mt-5">Registrar Clientes</h1>
 
-    <!-- Mostrar mensaje de éxito al eliminar un cliente -->
+    <!-- Mostrar mensaje de éxito o error -->
     <?php if (isset($_GET['success']) && $_GET['success'] == 1): ?>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <strong>¡Éxito!</strong> El cliente ha sido eliminado correctamente.
+            <strong>¡Éxito!</strong> El cliente ha sido anulado correctamente.
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    <?php elseif (isset($_GET['error']) && $_GET['error'] == 1): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error!</strong> No se pudo anular el cliente.
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
             </button>
@@ -97,6 +115,7 @@ if (!$conn) {
             <th>Ciudad</th>
             <th>Persona de Contacto Designada</th>
             <th>Usuario Asignado</th>
+            <th>Estado</th>
             <th>Acciones</th>
         </tr>
         </thead>
@@ -104,7 +123,7 @@ if (!$conn) {
         <?php
         // Consulta SQL para obtener los datos de clientes, ciudades y usuarios
         $sql = "SELECT clientes.Idcliente, clientes.Nombre, clientes.Direccion, clientes.Telefono, clientes.Email, 
-                       ciudades.nombre AS Ciudad, usuarios.Nombre AS Usuario, clientes.Persona_contacto_designada
+                       ciudades.nombre AS Ciudad, usuarios.Nombre AS Usuario, clientes.Persona_contacto_designada, clientes.estado
                 FROM clientes
                 LEFT JOIN ciudades ON clientes.Idciudad = ciudades.idciudad
                 LEFT JOIN usuarios ON clientes.IDusuario = usuarios.IDusuario";
@@ -113,7 +132,10 @@ if (!$conn) {
         // Verificar si hay resultados y mostrar los datos en la tabla
         if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
-                echo "<tr>
+                $estado = htmlspecialchars($row['estado']);
+                $claseAnulado = $estado == 'anulado' ? 'anulado' : '';
+
+                echo "<tr class='{$claseAnulado}'>
                         <td>{$row['Idcliente']}</td>
                         <td>{$row['Nombre']}</td>
                         <td>{$row['Direccion']}</td>
@@ -122,14 +144,21 @@ if (!$conn) {
                         <td>{$row['Ciudad']}</td>
                         <td>{$row['Persona_contacto_designada']}</td>
                         <td>{$row['Usuario']}</td>
-                        <td>
-                            <a href='editar_cliente.php?id={$row['Idcliente']}' class='btn btn-warning btn-sm'><i class='fas fa-edit'></i> Editar</a>
-                            <a href='eliminar_cliente.php?id={$row['Idcliente']}' class='btn btn-danger btn-sm' onclick='return confirm(\"¿Estás seguro de que deseas eliminar este cliente?\");'><i class='fas fa-trash'></i> Eliminar</a>
-                        </td>
-                       </tr>";
+                        <td>{$estado}</td>
+                        <td>";
+
+                // Mostrar botones según el estado
+                if ($estado == 'activo') {
+                    echo "<a href='editar_cliente.php?id={$row['Idcliente']}' class='btn btn-warning btn-sm'><i class='fas fa-edit'></i> Editar</a>
+                          <a href='anular_cliente.php?id={$row['Idcliente']}' class='btn btn-danger btn-sm' onclick='return confirm(\"¿Estás seguro de que deseas anular este cliente?\");'><i class='fas fa-ban'></i> Anular</a>";
+                } else {
+                    echo "<button class='btn btn-secondary btn-sm' disabled><i class='fas fa-ban'></i> Anulado</button>";
+                }
+
+                echo "</td></tr>";
             }
         } else {
-            echo "<tr><td colspan='9'>No hay clientes</td></tr>";
+            echo "<tr><td colspan='10'>No hay clientes registrados.</td></tr>";
         }
 
         // Cerrar la conexión a la base de datos

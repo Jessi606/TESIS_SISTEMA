@@ -75,13 +75,13 @@ $query = mysqli_query($con, $sql);
         <h1 class="text-center">Registrar Usuarios</h1>
         <form action="insert_usuario.php" method="POST" class="mb-4">
             <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar</button>
-            <a href="/TESIS_SISTEMA/manuales_usuario/Gestión de Usuarios.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
+            <a href="/TESIS_SISTEMA/manuales_usuario/Gestion de Usuarios_usuarios.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
         </form>
 
         <div>
             <h2>Usuarios Registrados</h2>
             <table class="table table-bordered table-striped">
-                <thead>
+                <thead> 
                     <tr>
                         <th>Código</th>
                         <th>Nombre</th>
