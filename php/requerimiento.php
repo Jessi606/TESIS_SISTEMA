@@ -65,10 +65,10 @@ if (isset($_GET['anular'])) {
     $stmt->bind_param('si', $estadoAnulado, $id);
     if ($stmt->execute()) {
         registrarAuditoria($con, $id, 'Anular', "El requerimiento '$tituloRequerimiento' fue anulado.", $idUsuario);
+        // Redireccionar con mensaje de éxito
+        header("Location: {$_SERVER['PHP_SELF']}?success=anulado");
+        exit;
     }
-    // Redireccionar a esta misma página después de actualizar el estado
-    header("Location: {$_SERVER['PHP_SELF']}");
-    exit;
 }
 
 // Manejar la acción de Regresar
@@ -146,11 +146,21 @@ $query = mysqli_query($con, $sql);
 <body>
     <div class="container">
         <h1 class="text-center">Requerimientos de Auditoría</h1>
+
+        <?php if (isset($_GET['success']) && $_GET['success'] === 'anulado'): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <strong>¡Éxito!</strong> El requerimiento fue anulado correctamente.
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        <?php endif; ?>
+
         <form action="crear_requerimiento.php" method="GET" class="mb-4 d-flex align-items-start">
             <button type="submit" class="btn btn-primary mr-2"><i class="fas fa-plus"></i> Agregar Requerimiento</button>
             <a href="registro_audit_requerimiento.php" class="btn btn-secondary mr-2"><i class="fas fa-file-alt"></i> Ver Registro de Auditoría</a>
             <a href="/TESIS_SISTEMA/Manuales de usuario/Gestión de Auditoría_requerimientos_actualizado.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
-            </form>
+        </form>
         <div>
             <h2>Requerimientos Registrados</h2>
             <table class="table table-bordered table-striped">

@@ -36,45 +36,12 @@ $resultRemitentes = $conn->query($sqlRemitentes);
 $sqlProyectos = "SELECT Idproyecto, Descripcion FROM proyecto_auditoria";
 $resultProyectos = $conn->query($sqlProyectos);
 
-// Función para obtener la descripción del proyecto por ID
-function obtenerDescripcionProyecto($conn, $idProyecto) {
-    $sql = "SELECT Descripcion FROM proyecto_auditoria WHERE Idproyecto = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $idProyecto);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        $proyecto = $result->fetch_assoc();
-        return $proyecto['Descripcion'];
-    } else {
-        return "Proyecto no encontrado";
-    }
-}
-
 // Función para registrar auditoría de requerimientos
 function registrarAuditoriaRequerimiento($conn, $usuario_id, $accion, $detalles, $idRequerimiento) {
-    try {
-        // Preparar la consulta para insertar auditoría de requerimiento
-        $sql_auditoria = "INSERT INTO auditoria_requerimientos (IDusuario, Accion, Detalles, FechaHora, IdRequerimiento) VALUES (?, ?, ?, NOW(), ?)";
-        $stmt_auditoria = $conn->prepare($sql_auditoria);
-        
-        if (!$stmt_auditoria) {
-            throw new Exception("Error al preparar la consulta de auditoría de requerimiento: " . $conn->error);
-        }
-        
-        $stmt_auditoria->bind_param("isss", $usuario_id, $accion, $detalles, $idRequerimiento);
-
-        // Ejecutar la consulta preparada
-        if ($stmt_auditoria->execute()) {
-            return true;
-        } else {
-            throw new Exception("Error al ejecutar la consulta de auditoría de requerimiento: " . $stmt_auditoria->error);
-        }
-    } catch (Exception $e) {
-        echo "Error al registrar auditoría de requerimiento: " . $e->getMessage();
-        return false;
-    }
+    $sql_auditoria = "INSERT INTO auditoria_requerimientos (IDusuario, Accion, Detalles, FechaHora, Idrequerimiento) VALUES (?, ?, ?, NOW(), ?)";
+    $stmt_auditoria = $conn->prepare($sql_auditoria);
+    $stmt_auditoria->bind_param("issi", $usuario_id, $accion, $detalles, $idRequerimiento);
+    $stmt_auditoria->execute();
 }
 
 // Verificar si el formulario ha sido enviado y procesarlo
@@ -86,7 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $fecha_vencimiento = $_POST['fecha_vencimiento'];
     $proyecto = $_POST['proyecto'];
     
-    // Validar datos del formulario (ejemplo básico)
+    // Validar datos del formulario
     if (empty($titulo) || empty($descripcion) || empty($remitente) || empty($fecha_vencimiento) || empty($proyecto)) {
         echo "Por favor complete todos los campos.";
         exit();
@@ -108,12 +75,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $idRequerimiento = $stmt->insert_id;
 
         // Obtener la descripción del proyecto
-        $descripcionProyecto = obtenerDescripcionProyecto($conn, $proyecto);
-
-        // Registrar acción de auditoría de requerimiento
         $accion = "Crear requerimiento";
-        $detalles = "Título: $titulo, Descripción: $descripcion, Solicitante: $solicitante, Fecha de Creación: $fecha_creacion, Fecha de Vencimiento: $fecha_vencimiento, Remitente: $remitente, Proyecto: $descripcionProyecto";
-        registrarAuditoriaRequerimiento($conn, $_SESSION['usuario_id'], $accion, $detalles, $idRequerimiento);
+        $detalles = "Título: $titulo, Descripción: $descripcion, Solicitante: $solicitante, Fecha de Creación: $fecha_creacion, Fecha de Vencimiento: $fecha_vencimiento, Remitente: $remitente, Proyecto: " . obtenerDescripcionProyecto($conn, $proyecto);
+        registrarAuditoriaRequerimiento($conn, $user_id, $accion, $detalles, $idRequerimiento);
         
         header("Location: requerimiento.php?success=1");
         exit();
@@ -123,6 +87,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $stmt->close();
     $conn->close();
+}
+
+// Función para obtener la descripción del proyecto por ID
+function obtenerDescripcionProyecto($conn, $idProyecto) {
+    $sql = "SELECT Descripcion FROM proyecto_auditoria WHERE Idproyecto = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $idProyecto);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $proyecto = $result->fetch_assoc();
+        return $proyecto['Descripcion'];
+    } else {
+        return "Proyecto no encontrado";
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -135,10 +115,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <style>
         body {
             background-color: #a6bbd7;
-            padding-top: 20px; /* Ajuste para mejorar visualización en dispositivos móviles */
+            padding-top: 20px;
         }
         .container {
-            max-width: 800px; /* Reducido para mejor legibilidad y estructura */
+            max-width: 800px;
             margin: auto;
             border-radius: 10px;
             background-color: #fff;
@@ -166,7 +146,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         h2 {
             text-align: center;
-            margin-bottom: 30px; /* Espacio adicional debajo del título */
+            margin-bottom: 30px;
         }
     </style>
 </head>
@@ -193,10 +173,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <option value="<?php echo htmlspecialchars($row['Nombre']); ?>"><?php echo htmlspecialchars($row['Nombre']); ?></option>
                     <?php endwhile; ?>
                 </select>
-            </div>
-            <div class="form-group">
-                <label for="fecha_creacion">Fecha de Creación:</label>
-                <input type="text" class="form-control" id="fecha_creacion" name="fecha_creacion" value="<?php echo date("Y-m-d"); ?>" readonly>
             </div>
             <div class="form-group">
                 <label for="fecha_vencimiento">Fecha de Vencimiento:</label>

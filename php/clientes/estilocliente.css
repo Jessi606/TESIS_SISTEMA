@@ -1,3 +1,4 @@
+/* Estilo global */
 * {
     margin: 0;
     padding: 0;
@@ -5,110 +6,182 @@
     border: none;
     text-decoration: none;
     box-sizing: border-box;
-    font-family:sans-serif;
+    font-family: sans-serif;
 }
 
-  
+/* Fondo de toda la página */
 body {
-    background: #a6bbd7;
+    background: #a6bbd7; /* Fondo azul claro */
 }
 
-.container{
-    display: flex;
+/* Contenedor principal que incluye la barra de navegación y el contenido */
+.container {
+    display: flex; /* Coloca los hijos en línea (barra y contenido) */
 }
 
+/* Barra de navegación lateral */
 nav {
-    position: relative;
+    position: sticky; /* Fija la barra al hacer scroll */
     top: 0;
-    bottom: 0;
-    height: 100vh;
+    height: 100vh; /* Ocupa toda la altura de la pantalla */
     left: 0;
-    background: #fff;
-    width: 300px;
-    overflow: hidden;
-    box-shadow: 0 20px 35px rgba(0, 0, 0, 0.904);
-}
-
-.logo {
-    text-align: center;
+    background: #fff; /* Fondo blanco */
+    width: 350px; /* Ancho de la barra de navegación */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Sombra suave */
+    border-radius: 10px; /* Bordes redondeados */
+    padding: 20px; /* Espaciado interno */
     display: flex;
-    align-items: center;
-    padding: 20px;
+    flex-direction: column; /* Alinea los elementos de arriba a abajo */
+    align-items: flex-start; /* Alinea los elementos al inicio */
 }
 
+/* Logo dentro de la barra de navegación */
+.logo {
+    display: flex;
+    justify-content: flex-start; /* Mueve el logo a la izquierda */
+    margin-bottom: 20px; /* Espaciado debajo del logo */
+}
 
 .logo img {
-    width: 252px;
-    height: 77px;
-    border-radius: 5px;
+    width: 200px; /* Ancho del logo */
+    height: auto; /* Ajusta la altura automáticamente */
+    border-radius: 5px; /* Bordes redondeados */
 }
 
+/* Título en la barra de navegación */
 .nav-title {
     font-size: 20px;
     font-weight: bold;
-    padding: 10px 20px;
-    color: #333; 
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Enlaces de la barra de navegación */
+nav ul {
+    list-style: none; /* Elimina los puntos de la lista */
+    padding: 0;
+}
+
+nav ul li {
+    margin-bottom: 15px;
 }
 
 a {
-    position: relative;
-    color: rgb(85, 83, 83);
+    color: #555;
     font-size: 18px;
-    display: table;
-    width: 280px;
-    padding: 10px;
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-nav .fas {
-    position: relative;
-    width: 70px;
-    height: 40px;
-    top: 14px;
-    font-size: 20px;
-    text-align: center;
-}
-
-.nav-item {
-    position: relative;
-    top: 12px;
-    margin-left: 10px;
+a i {
+    margin-right: 10px; /* Espacio entre el ícono y el texto */
 }
 
 a:hover {
     background: #00BFFF;
+    color: #fff;
 }
-  
-.logout{
+
+nav .logout {
     position: absolute;
-    bottom: 0;
-}
-/* Estilo básico para el submenú */
-.submenu {
-    display: none;
-    position: absolute;
-    background-color: #fff; /* Fondo blanco */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra suave */
-    z-index: 1;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
 }
 
-/* Estilo para mostrar el submenú cuando se pasa el mouse sobre el elemento padre */
-nav ul li:hover .submenu {
-    display: block;
+/* Fondo principal */
+.main-background {
+    background: #a6bbd7;
+    padding: 50px;
+    flex: 1;
 }
 
-/* Estilo para los elementos del submenú */
-.submenu li {
-    padding: 10px;
+.main-container {
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    padding: 30px;
+    max-width: 1700px; /* Reducido para ajustar mejor el ancho */
+    margin: 0 auto; /* Centrar horizontalmente */
 }
 
-/* Estilo para los enlaces del submenú */
-.submenu a {
+/* Contenedor del título y botón de ayuda */
+.title-container {
+    display: flex;
+    align-items: center; /* Alinea verticalmente los elementos */
+    justify-content: space-between; /* Título a la izquierda, botón a la derecha */
+    margin-bottom: 20px;
+}
+
+.title-container h1 {
+    font-size: 28px;
+    color: #333; /* Gris oscuro */
+}
+
+/* Botón de ayuda */
+.btn-help {
+    display: flex;
+    align-items: center; /* Alinea el ícono y texto verticalmente */
+    color: #007bff; /* Color del texto */
+    font-size: 1rem;
     text-decoration: none;
-    color: #333; /* Color del texto */
-    display: block;
+    gap: 5px;
+    padding: 5px;
+    background-color: transparent;
+    border: none;
+    justify-content: flex-end; /* Mueve el botón a la derecha */
 }
 
-/* Estilo para el hover de los enlaces del submenú */
-.submenu a:hover {
-    background-color: #87CEFA; /* Cambio de color de fondo al pasar el mouse */
-}  
+.btn-help:hover {
+    color: #0056b3;
+    background-color: transparent;
+}
+
+/* Contenido principal debajo del título */
+.main-content {
+    margin-top: 20px; /* Espaciado superior */
+}
+
+/* Subtítulos */
+.main-content h2 {
+    font-size: 22px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Contenedor de las tarjetas */
+.cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px; /* Espacio entre tarjetas */
+    justify-content: flex-start; /* Alineación a la izquierda */
+    margin-top: 20px;
+}
+
+/* Tarjetas */
+.card {
+    background: #C5CAE9; /* Fondo claro */
+    border-radius: 10px; /* Bordes redondeados */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Sombra */
+    width: 300px; /* Ancho de cada tarjeta */
+    padding: 20px;
+    text-align: left; /* Alinear texto a la izquierda */
+}
+
+/* Título de las tarjetas */
+.card-header h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px; /* Espaciado debajo del título */
+    color: #007BFF; /* Azul */
+}
+
+/* Contenido de las tarjetas */
+.card-body p {
+    margin-bottom: 10px; /* Espaciado entre párrafos */
+    color: #555; /* Texto gris */
+    font-size: 1rem;
+}

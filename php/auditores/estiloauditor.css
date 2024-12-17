@@ -24,7 +24,7 @@ nav {
     height: 100vh;
     left: 0;
     background: #fff;
-    width: 300px;
+    width: 350px;
     overflow: hidden;
     box-shadow: 0 20px 35px rgba(0, 0, 0, 0.904);
 }
@@ -112,3 +112,119 @@ nav ul li:hover .submenu {
 .submenu a:hover {
     background-color: #87CEFA; /* Cambio de color de fondo al pasar el mouse */
 }  
+
+/* Fondo principal */
+.main-background {
+    background: #a6bbd7;
+    padding: 50px;
+    flex: 1;
+}
+
+.main-container {
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    padding: 30px;
+    max-width: 1700px; /* Reducido para ajustar mejor el ancho */
+    margin: 0 auto; /* Centrar horizontalmente */
+}
+
+/* Contenedor del título y botón de ayuda */
+.title-container {
+    display: flex;
+    align-items: center; /* Alinea verticalmente los elementos */
+    justify-content: space-between; /* Espacio entre título y botón */
+    margin-bottom: 20px;
+}
+
+/* Botón de ayuda */
+.btn-help {
+    display: flex;
+    align-items: center; /* Alinea el ícono y texto verticalmente */
+    color: #007bff; /* Color del texto */
+    font-size: 1rem;
+    text-decoration: none;
+    gap: 5px;
+    padding: 5px;
+    background-color: transparent;
+    border: none;
+    margin-left: auto; /* Empuja el botón hacia el borde derecho */
+}
+
+.btn-help:hover {
+    color: #0056b3;
+    background-color: transparent;
+    text-decoration: none;
+}
+
+/* Contenedor de eventos */
+.main-skills h3 {
+    font-size: 1.5rem;
+    margin-bottom: 20px; /* Espacio entre el título y las tarjetas */
+    color: #333;
+}
+
+.events-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px; /* Espaciado entre las tarjetas */
+    justify-content: flex-start; /* Alineación inicial */
+}
+
+/* Tarjetas */
+.events-card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    width: 250px;
+    text-align: center;
+}
+
+.events-header {
+    padding: 10px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+    border-radius: 10px 10px 0 0;
+    background: linear-gradient(90deg, #a29bfe, #6c5ce7);
+}
+
+.events-content {
+    padding: 20px;
+}
+
+.event-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.event-date {
+    color: #007bff;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.event-date i {
+    color: orange;
+}
+
+/* Botón */
+.btn-calendar {
+    display: inline-block;
+    background: #00BFFF;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 1rem;
+    text-decoration: none;
+    margin-top: 30px; /* Espacio entre el botón y el contenido */
+}
+
+.btn-calendar:hover {
+    background: #007bbf;
+}

@@ -30,7 +30,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'anulado') {
             color: #333;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1800px;
             background-color: #fff;
             border-radius: 10px;
             padding: 20px;

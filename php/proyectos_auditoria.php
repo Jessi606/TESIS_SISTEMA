@@ -48,7 +48,7 @@ if (isset($_GET['anular'])) {
         $idUsuario = 1; // Cambia por el ID del usuario actual
         registrarAuditoriaProyecto($conn, $idProyecto, $descripcionProyecto, "anulado", $idUsuario);
         
-        header("Location: proyectos_auditoria.php");
+        header("Location: proyectos_auditoria.php?success=anulado");
         exit();
     }
 }
@@ -127,6 +127,16 @@ if (isset($_GET['anular'])) {
 <body>
 <div class="container">
     <h1 class="mt-5">Proyectos de Auditoría</h1>
+
+    <?php if (isset($_GET['success']) && $_GET['success'] === 'anulado'): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong>¡Éxito!</strong> El proyecto fue anulado correctamente.
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    <?php endif; ?>
+
     <div class="d-flex justify-content-between mb-3">
         <div class="d-flex">
             <a href="agregar_proyecto.php" class="btn btn-primary mr-2"><i class="fas fa-plus"></i> Agregar</a>

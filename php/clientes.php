@@ -41,33 +41,13 @@ if (!$conn) {
             margin-top: 20px;
         }
 
-        h2 {
-            color: #000;
-            margin-top: 20px;
-        }
-
-        .btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
-        }
-
-        .btn-primary:hover {
-            background-color: #0056b3;
-            border-color: #0056b3;
-        }
-
         .table th {
             background-color: #343a40;
             color: #fff;
         }
 
-        .table td {
-            background-color: #f8f9fa;
-        }
-
-        /* Estilo para los clientes anulados */
         .anulado {
-            background-color: #f0e68c; /* Color para destacar que está anulado */
+            background-color: #f0e68c;
             color: #888;
         }
 
@@ -91,7 +71,7 @@ if (!$conn) {
         </div>
     <?php elseif (isset($_GET['error']) && $_GET['error'] == 1): ?>
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>Error!</strong> No se pudo anular el cliente.
+            <strong>¡Error!</strong> No se pudo realizar la acción solicitada.
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
             </button>
@@ -101,7 +81,8 @@ if (!$conn) {
     <div class="d-flex mb-3">
         <a href="agregar_cliente.php" class="btn btn-primary"><i class="fas fa-user-plus"></i> Agregar</a>
         <a href="/TESIS_SISTEMA/Manuales de usuario/Gestión de Usuarios_clientes_actualizado.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-question-circle"></i> Ayuda</a>
-     </div>
+    </div>
+
     <h2 class="mt-3">Clientes Registrados</h2>
     <table class="table table-striped mt-3">
         <thead>
@@ -120,7 +101,6 @@ if (!$conn) {
         </thead>
         <tbody>
         <?php
-        // Consulta SQL para obtener los datos de clientes, ciudades y usuarios
         $sql = "SELECT clientes.Idcliente, clientes.Nombre, clientes.Direccion, clientes.Telefono, clientes.Email, 
                        ciudades.nombre AS Ciudad, usuarios.Nombre AS Usuario, clientes.Persona_contacto_designada, clientes.estado
                 FROM clientes
@@ -128,7 +108,6 @@ if (!$conn) {
                 LEFT JOIN usuarios ON clientes.IDusuario = usuarios.IDusuario";
         $result = $conn->query($sql);
 
-        // Verificar si hay resultados y mostrar los datos en la tabla
         if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
                 $estado = htmlspecialchars($row['estado']);
@@ -146,7 +125,6 @@ if (!$conn) {
                         <td>{$estado}</td>
                         <td>";
 
-                // Mostrar botones según el estado
                 if ($estado == 'activo') {
                     echo "<a href='editar_cliente.php?id={$row['Idcliente']}' class='btn btn-warning btn-sm'><i class='fas fa-edit'></i> Editar</a>
                           <a href='anular_cliente.php?id={$row['Idcliente']}' class='btn btn-danger btn-sm' onclick='return confirm(\"¿Estás seguro de que deseas anular este cliente?\");'><i class='fas fa-ban'></i> Anular</a>";
@@ -160,7 +138,6 @@ if (!$conn) {
             echo "<tr><td colspan='10'>No hay clientes registrados.</td></tr>";
         }
 
-        // Cerrar la conexión a la base de datos
         $conn->close();
         ?>
         </tbody>
@@ -168,7 +145,6 @@ if (!$conn) {
     <a href="admin.php" class="btn btn-primary"><i class="fas fa-arrow-left"></i> Volver a la página principal</a>
 </div>
 
-<!-- Scripts de Bootstrap -->
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>

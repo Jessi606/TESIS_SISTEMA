@@ -38,7 +38,7 @@ if (isset($_GET['anular_tarea'])) {
         $usuario_id = $_SESSION['usuario_id'];
         registrarAuditoria($conn, $usuario_id, "ANULAR TAREA", "Se anuló la tarea '$descripcionTarea'", $id_tarea);
         
-        header("Location: tarea.php");
+        header("Location: tarea.php?success=anulada");
         exit();
     }
 }
@@ -87,6 +87,16 @@ $result = $conn->query($sql);
 <body>
     <div class="container">
         <h1 class="mt-5">Tareas de Auditoría</h1>
+
+        <?php if (isset($_GET['success']) && $_GET['success'] === 'anulada'): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <strong>¡Éxito!</strong> La tarea fue anulada correctamente.
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        <?php endif; ?>
+
         <div class="button-group">
             <a href="agregar_tarea.php" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar Tarea</a>
             <a href="registro_auditoria.php" class="btn btn-info"><i class="fas fa-file-alt"></i> Ver Registro de Auditoría</a>

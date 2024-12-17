@@ -17,8 +17,19 @@ if ($idRequerimiento <= 0) {
 }
 
 // Obtener las evidencias del requerimiento
-$sql = "SELECT Descripcion, Comentario, Fecha_recopilacion, Evidencia FROM evidencias WHERE Idrequerimiento = $idRequerimiento";
-$resultado = mysqli_query($con, $sql);
+$sql = "SELECT Descripcion, Comentario, Fecha_recopilacion, Evidencia 
+        FROM evidencias 
+        WHERE Idrequerimiento = ?";
+$stmt = $con->prepare($sql);
+$stmt->bind_param("i", $idRequerimiento);
+$stmt->execute();
+$resultado = $stmt->get_result();
+
+// Verificar si hay evidencias
+if ($resultado->num_rows === 0) {
+    echo "<p>No se encontraron evidencias para este requerimiento.</p>";
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
@@ -67,12 +78,22 @@ $resultado = mysqli_query($con, $sql);
                 </tr>
             </thead>
             <tbody>
-                <?php while ($fila = mysqli_fetch_assoc($resultado)) { ?>
+                <?php while ($fila = $resultado->fetch_assoc()) { ?>
                     <tr>
                         <td><?= htmlspecialchars($fila['Descripcion']) ?></td>
                         <td><?= htmlspecialchars($fila['Comentario']) ?></td>
                         <td><?= htmlspecialchars($fila['Fecha_recopilacion']) ?></td>
-                        <td><a href="../uploads/<?= htmlspecialchars($fila['Evidencia']) ?>" download><?= htmlspecialchars($fila['Evidencia']) ?></a></td>
+                        <td>
+                            <?php
+                            $archivo = htmlspecialchars($fila['Evidencia']);
+                            $rutaArchivo = "../uploads/$archivo"; // Ajusta la ruta a "../uploads/" según tu estructura
+                            if (file_exists($rutaArchivo)) {
+                                echo "<a href='$rutaArchivo' target='_blank' download>" . htmlspecialchars($archivo) . "</a>";
+                            } else {
+                                echo "Archivo no encontrado";
+                            }
+                            ?>
+                        </td>
                     </tr>
                 <?php } ?>
             </tbody>
@@ -83,5 +104,6 @@ $resultado = mysqli_query($con, $sql);
 </html>
 
 <?php
+// Cerrar la conexión
 mysqli_close($con);
 ?>

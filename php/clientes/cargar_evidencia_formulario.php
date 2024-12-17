@@ -14,50 +14,64 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $idRequerimiento = intval($_POST['idRequerimiento']);
     $descripcion = mysqli_real_escape_string($con, $_POST['descripcionEvidencia']);
     $comentario = mysqli_real_escape_string($con, $_POST['comentarioEvidencia']);
-    $fechaRecopilacion = mysqli_real_escape_string($con, $_POST['fechaRecopilacion']); // Fecha y hora de recopilación
+    $fechaRecopilacion = mysqli_real_escape_string($con, $_POST['fechaRecopilacion']);
 
     // Verificar si se han subido archivos
-if (isset($_FILES['archivoEvidencia']) && count($_FILES['archivoEvidencia']['name']) > 0) {
-    // Directorio donde se guardarán los archivos
-    $directorioSubida = '../../uploads/'; // Ruta relativa para acceder a la carpeta uploads desde la carpeta php
+    if (isset($_FILES['archivoEvidencia']) && count($_FILES['archivoEvidencia']['name']) > 0) {
+        // Directorio donde se guardarán los archivos
+        $directorioSubida = '../../uploads/';
 
-    // Verificar el estado actual del requerimiento
-    $sqlEstado = "SELECT Estado_requerimiento FROM requerimientos WHERE Idrequerimiento = $idRequerimiento";
-    $resultadoEstado = mysqli_query($con, $sqlEstado);
-    $rowEstado = mysqli_fetch_assoc($resultadoEstado);
-    $estadoActual = $rowEstado['Estado_requerimiento'];
+        // Crear el directorio si no existe
+        if (!is_dir($directorioSubida)) {
+            mkdir($directorioSubida, 0777, true);
+        }
 
-    // Si el estado actual es "Devuelto", actualizarlo a "Enviado"
-    if ($estadoActual == 'Devuelto') {
-        $sqlActualizarEstado = "UPDATE requerimientos SET Estado_requerimiento = 'Enviado' WHERE Idrequerimiento = $idRequerimiento";
-        mysqli_query($con, $sqlActualizarEstado);
-    }
+        // Verificar el estado actual del requerimiento
+        $sqlEstado = "SELECT Estado_requerimiento FROM requerimientos WHERE Idrequerimiento = $idRequerimiento";
+        $resultadoEstado = mysqli_query($con, $sqlEstado);
 
-    // Iterar sobre cada archivo
-    for ($i = 0; $i < count($_FILES['archivoEvidencia']['name']); $i++) {
-        $archivoEvidencia = $_FILES['archivoEvidencia']['name'][$i];
-        $rutaArchivo = $directorioSubida . basename($archivoEvidencia);
+        if ($resultadoEstado && mysqli_num_rows($resultadoEstado) > 0) {
+            $rowEstado = mysqli_fetch_assoc($resultadoEstado);
+            $estadoActual = $rowEstado['Estado_requerimiento'];
 
-        // Mover el archivo subido al directorio de destino
-        if (move_uploaded_file($_FILES['archivoEvidencia']['tmp_name'][$i], $rutaArchivo)) {
-            // Insertar los datos en la base de datos
-            $sql = "INSERT INTO evidencias (Descripcion, Comentario, Fecha_recopilacion, Idrequerimiento, Evidencia) VALUES ('$descripcion', '$comentario', '$fechaRecopilacion', $idRequerimiento, '$archivoEvidencia')";
-
-            if (!mysqli_query($con, $sql)) {
-                echo "Error: " . mysqli_error($con);
+            // Si el estado actual es "Devuelto", actualizarlo a "Enviado"
+            if ($estadoActual == 'Devuelto') {
+                $sqlActualizarEstado = "UPDATE requerimientos SET Estado_requerimiento = 'Enviado' WHERE Idrequerimiento = $idRequerimiento";
+                if (!mysqli_query($con, $sqlActualizarEstado)) {
+                    die("Error al actualizar el estado del requerimiento: " . mysqli_error($con));
+                }
             }
         } else {
-            echo "Error al subir el archivo: " . $_FILES['archivoEvidencia']['name'][$i];
+            die("Requerimiento no encontrado. Verifica el ID.");
         }
+
+        // Iterar sobre cada archivo subido
+        for ($i = 0; $i < count($_FILES['archivoEvidencia']['name']); $i++) {
+            $archivoEvidencia = basename($_FILES['archivoEvidencia']['name'][$i]);
+            $rutaArchivo = $directorioSubida . $archivoEvidencia;
+
+            // Mover el archivo subido al directorio de destino
+            if (move_uploaded_file($_FILES['archivoEvidencia']['tmp_name'][$i], $rutaArchivo)) {
+                // Insertar los datos en la base de datos
+                $sqlInsertarEvidencia = "
+                    INSERT INTO evidencias (Descripcion, Comentario, Fecha_recopilacion, Idrequerimiento, Evidencia) 
+                    VALUES ('$descripcion', '$comentario', '$fechaRecopilacion', $idRequerimiento, '$archivoEvidencia')
+                ";
+
+                if (!mysqli_query($con, $sqlInsertarEvidencia)) {
+                    echo "Error al guardar la evidencia en la base de datos: " . mysqli_error($con);
+                }
+            } else {
+                echo "Error al subir el archivo: " . htmlspecialchars($_FILES['archivoEvidencia']['name'][$i]);
+            }
+        }
+
+        // Redireccionar a la página de éxito
+        header('Location: exito.php');
+        exit;
+    } else {
+        echo "No se han subido archivos.";
     }
-
-    // Redireccionar a la página de éxito
-    header('Location: exito.php');
-    exit;
-} else {
-    echo "No se han subido archivos.";
-}
-
 } else {
     // Obtener el ID del requerimiento de la URL
     $idRequerimiento = isset($_GET['idRequerimiento']) ? intval($_GET['idRequerimiento']) : 0;

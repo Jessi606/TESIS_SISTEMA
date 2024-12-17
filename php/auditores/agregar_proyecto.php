@@ -1,5 +1,9 @@
 <?php
 session_start();
+
+// Establecer la zona horaria de Paraguay, Asunción
+date_default_timezone_set('America/Asuncion');
+
 // Verificar si el usuario ha iniciado sesión
 if (!isset($_SESSION['usuario_id'])) {
     header("Location: index.php");
@@ -36,11 +40,7 @@ function obtenerUsuariosPorNivel($conn, $nivel) {
     $stmt->execute();
     $result = $stmt->get_result();
 
-    if ($result->num_rows > 0) {
-        return $result;
-    } else {
-        return null;
-    }
+    return $result->num_rows > 0 ? $result : null;
 }
 
 // Obtener listas de usuarios por nivel específico
@@ -78,9 +78,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // Registrar la acción en el log de auditoría
-        $accion = "Agregar Proyecto";
         $detalles = "Se agregó el proyecto '$descripcion' con ID $id_proyecto";
-        registrarAuditoriaProyecto($conn, $id_proyecto, $accion, $detalles, $user_id);
+        registrarAuditoriaProyecto($conn, $id_proyecto, $detalles, $user_id);
 
         echo "Nuevo proyecto creado exitosamente";
         header("Location: proyectos_auditoria.php");
@@ -93,10 +92,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // Función para registrar acciones en la auditoría de proyectos
-function registrarAuditoriaProyecto($con, $idProyecto, $accion, $detalles, $idUsuario) {
-    $sql = "INSERT INTO auditoria_proyectos (Idproyecto, Accion, Detalles, FechaHora, IDusuario) VALUES (?, ?, ?, current_timestamp(), ?)";
+function registrarAuditoriaProyecto($con, $idProyecto, $detalles, $idUsuario) {
+    $sql = "INSERT INTO auditoria_proyectos (Idproyecto, Detalles, FechaHora, IDusuario) VALUES (?, ?, current_timestamp(), ?)";
     $stmt = $con->prepare($sql);
-    $stmt->bind_param('issi', $idProyecto, $accion, $detalles, $idUsuario);
+    $stmt->bind_param('isi', $idProyecto, $detalles, $idUsuario);
     $stmt->execute();
 }
 ?>

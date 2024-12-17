@@ -1,21 +1,19 @@
 <?php
 session_start();
+include('conexion.php');
+$conn = conectarDB();
 
-// Verificar si el usuario ha iniciado sesión
 if (!isset($_SESSION['usuario_id'])) {
     header("Location: index.php");
     exit();
 }
 
-// Incluir el archivo de conexión a la base de datos
-require_once("conexion.php");
-$conn = conectarDB();
-
 // Función para registrar auditoría
-function registrarAuditoria($conn, $usuario_id, $accion, $detalles) {
-    $sql_auditoria = "INSERT INTO auditoria (IDusuario, Accion, Detalles) VALUES (?, ?, ?)";
+function registrarAuditoria($conn, $usuario_id, $accion, $detalles, $tarea_id) {
+    $sql_auditoria = "INSERT INTO auditoria_tarea (IDusuario, Accion, Detalles, FechaHora, Idtarea) 
+                      VALUES (?, ?, ?, NOW(), ?)";
     $stmt_auditoria = $conn->prepare($sql_auditoria);
-    $stmt_auditoria->bind_param("iss", $usuario_id, $accion, $detalles);
+    $stmt_auditoria->bind_param("issi", $usuario_id, $accion, $detalles, $tarea_id);
     $stmt_auditoria->execute();
 }
 
@@ -24,15 +22,14 @@ date_default_timezone_set('America/Asuncion');
 
 // Obtener el nombre del usuario que ha iniciado sesión
 $user_id = $_SESSION['usuario_id'];
-$sql_usuario = "SELECT u.Nombre, r.Descripcion AS Rol
-                FROM usuarios u
-                LEFT JOIN roles r ON u.Idrol = r.Idrol
+$sql_usuario = "SELECT u.Nombre, r.Descripcion AS Rol 
+                FROM usuarios u 
+                LEFT JOIN roles r ON u.Idrol = r.Idrol 
                 WHERE u.IDusuario = ?";
 $stmt_usuario = $conn->prepare($sql_usuario);
 $stmt_usuario->bind_param("i", $user_id);
 $stmt_usuario->execute();
 $result_usuario = $stmt_usuario->get_result();
-
 if ($result_usuario->num_rows > 0) {
     $user = $result_usuario->fetch_assoc();
     $solicitante = $user['Nombre'];
@@ -42,7 +39,6 @@ if ($result_usuario->num_rows > 0) {
 
 // Manejar la acción de agregar tarea
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['agregar_tarea'])) {
-    // Obtener los valores del formulario
     $descripcion = isset($_POST['descripcion']) ? $_POST['descripcion'] : '';
     $fecha_inicio = isset($_POST['fecha_inicio']) ? $_POST['fecha_inicio'] : '';
     $fecha_fin = isset($_POST['fecha_fin']) ? $_POST['fecha_fin'] : '';
@@ -51,7 +47,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['agregar_tarea'])) {
     $proyecto_id = isset($_POST['proyecto_id']) ? $_POST['proyecto_id'] : '';
     $responsable_id = isset($_POST['responsable']) ? $_POST['responsable'] : '';
 
-    // Obtener el nombre del responsable
     $sql_responsable = "SELECT Nombre FROM usuarios WHERE IDusuario = ?";
     $stmt_responsable = $conn->prepare($sql_responsable);
     $stmt_responsable->bind_param("i", $responsable_id);
@@ -64,8 +59,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['agregar_tarea'])) {
         $responsable = "Desconocido";
     }
 
-    // Obtener la descripción del proyecto seleccionado
-    $proyecto_descripcion = "";
     $sql_proyecto = "SELECT Descripcion FROM proyecto_auditoria WHERE Idproyecto = ?";
     $stmt_proyecto = $conn->prepare($sql_proyecto);
     $stmt_proyecto->bind_param("i", $proyecto_id);
@@ -78,25 +71,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['agregar_tarea'])) {
         $proyecto_descripcion = "Proyecto Desconocido";
     }
 
-    // Capturar la fecha y hora actuales
     $fecha_creacion = date('Y-m-d H:i:s');
-
-    // Insertar la nueva tarea en la base de datos
     $sql_insert = "INSERT INTO tareas (Descripcion, Fecha_inicio, Fecha_fin, Fecha_creacion, Prioridad, Estado_tarea, Creador_tarea, Responsable, Idproyecto) 
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt_insert = $conn->prepare($sql_insert);
-    $stmt_insert->bind_param("ssssssssi", $descripcion, $fecha_inicio, $fecha_fin, $fecha_creacion, $prioridad, $estado_tarea, $solicitante, $responsable_id, $proyecto_id);
-
+    $stmt_insert->bind_param("ssssssssi", $descripcion, $fecha_inicio, $fecha_fin, $fecha_creacion, $prioridad, $estado_tarea, $user_id, $responsable_id, $proyecto_id);
+    
     if ($stmt_insert->execute()) {
-        // Obtener el ID de la tarea insertada
         $tarea_id = $stmt_insert->insert_id;
-
-        // Registrar la acción de auditoría
-        $accion_auditoria = "Agregar tarea de auditoría";
+        $accion_auditoria = "AGREGAR TAREA";
         $detalles_auditoria = "Descripción: $descripcion, Fecha de inicio: $fecha_inicio, Fecha de fin: $fecha_fin, Prioridad: $prioridad, Estado: $estado_tarea, Responsable: $responsable, Proyecto: $proyecto_descripcion";
-        registrarAuditoria($conn, $user_id, $accion_auditoria, $detalles_auditoria);
         
-        // Redireccionar a la página principal después de agregar la tarea
+        // Registrar la acción en el log de auditoría
+        registrarAuditoria($conn, $user_id, $accion_auditoria, $detalles_auditoria, $tarea_id);
+        
         header("Location: tarea.php");
         exit;
     } else {
@@ -107,24 +95,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['agregar_tarea'])) {
 // Obtener la lista de proyectos de auditoría
 $proyectos_sql = "SELECT Idproyecto, Descripcion FROM proyecto_auditoria";
 $proyectos_result = $conn->query($proyectos_sql);
-
-// Validar si la consulta fue exitosa
 if (!$proyectos_result) {
     echo "Error al obtener la lista de proyectos: " . $conn->error;
     exit();
 }
 
 // Obtener la lista de usuarios auditores
-$usuarios_auditores_sql = "SELECT IDusuario, Nombre FROM usuarios WHERE IDrol = 2"; // Filtrar solo los usuarios con el ID de rol de auditor (en este caso, 2)
+$usuarios_auditores_sql = "SELECT IDusuario, Nombre FROM usuarios WHERE IDrol = 2";
 $usuarios_auditores_result = $conn->query($usuarios_auditores_sql);
-
-// Validar si la consulta fue exitosa
 if (!$usuarios_auditores_result) {
     echo "Error al obtener la lista de usuarios auditores: " . $conn->error;
     exit();
 }
 ?>
- 
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -134,35 +118,13 @@ if (!$usuarios_auditores_result) {
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <style>
-    body {
-        background-color: #a6bbd7;
-    }
-    .container {
-        max-width: 1500px;
-        margin: auto;
-        border-radius: 10px;
-        margin-top: 50px;
-        background-color: #fff;
-        padding: 20px;
-        box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1);
-    }
-    .form-group {
-        margin-bottom: 20px;
-    }
-    .btn-primary {
-        background-color: #007bff;
-        border-color: #007bff;
-    }
-    .btn-primary:hover {
-        background-color: #0056b3;
-        border-color: #0056b3;
-    }
-    .alert {
-        margin-top: 20px;
-    }
-    h1 {
-        text-align: center;
-    }
+        body { background-color: #a6bbd7; }
+        .container { max-width: 1500px; margin: auto; border-radius: 10px; margin-top: 50px; background-color: #fff; padding: 20px; box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 20px; }
+        .btn-primary { background-color: #007bff; border-color: #007bff; }
+        .btn-primary:hover { background-color: #0056b3; border-color: #0056b3; }
+        .alert { margin-top: 20px; }
+        h1 { text-align: center; }
     </style>
 </head>
 <body>

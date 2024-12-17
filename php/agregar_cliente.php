@@ -14,8 +14,8 @@ if (!$conn) {
 $ciudades_sql = "SELECT idciudad, nombre FROM ciudades WHERE estado = 'activo'";
 $ciudades_result = $conn->query($ciudades_sql);
 
-// Obtener la lista de usuarios activos con rol de cliente
-$usuarios_sql = "SELECT IDusuario, Nombre FROM usuarios WHERE IDrol = 3 AND estado = 'activo'";
+// Obtener la lista de usuarios activos con rol de cliente (Idrol = 3 y Estado = 1)
+$usuarios_sql = "SELECT IDusuario, Nombre FROM usuarios WHERE IDrol = 3 AND Estado = 1";
 $usuarios_result = $conn->query($usuarios_sql);
 
 // Procesar el formulario cuando se envía
@@ -29,27 +29,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $persona_contacto_designada = $_POST['persona_contacto_designada'];
 
     // Validar si el usuario seleccionado ya está asignado
-    $usuario_duplicado_sql = "SELECT COUNT(*) as total FROM clientes WHERE IDusuario = '$idusuario'";
-    $usuario_duplicado_result = $conn->query($usuario_duplicado_sql);
+    $usuario_duplicado_sql = "SELECT COUNT(*) as total FROM clientes WHERE IDusuario = ?";
+    $stmt_check = $conn->prepare($usuario_duplicado_sql);
+    $stmt_check->bind_param("i", $idusuario);
+    $stmt_check->execute();
+    $usuario_duplicado_result = $stmt_check->get_result();
     $usuario_duplicado = $usuario_duplicado_result->fetch_assoc();
 
     if ($usuario_duplicado['total'] > 0) {
         echo "<script>alert('El usuario seleccionado ya está asignado a otro cliente. Por favor, seleccione otro usuario.');</script>";
     } else {
         $sql = "INSERT INTO clientes (Nombre, Direccion, Telefono, Email, Idciudad, IDusuario, Persona_contacto_designada) 
-                VALUES ('$nombre', '$direccion', '$telefono', '$email', '$idciudad', '$idusuario', '$persona_contacto_designada')";
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $stmt_insert = $conn->prepare($sql);
+        $stmt_insert->bind_param("ssssiss", $nombre, $direccion, $telefono, $email, $idciudad, $idusuario, $persona_contacto_designada);
 
-        if ($conn->query($sql) === TRUE) {
+        if ($stmt_insert->execute()) {
             // Redireccionar a la página de agregar cliente con el parámetro de éxito
             header("Location: agregar_cliente.php?success=1");
             exit();
         } else {
-            echo "Error: " . $sql . "<br>" . $conn->error;
+            echo "Error: " . $stmt_insert->error;
         }
     }
 
-    $conn->close();
+    $stmt_check->close();
+    $stmt_insert->close();
 }
+
+// Cerrar la conexión a la base de datos
+$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -78,41 +87,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin-bottom: 30px;
             text-align: center;
         }
-        label {
-            font-weight: bold;
-        }
         .form-control {
             border-radius: 20px;
-        }
-        .btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
-            border-radius: 20px;
-        }
-        .btn-primary:hover {
-            background-color: #0056b3;
-            border-color: #0056b3;
-        }
-        .btn-secondary {
-            background-color: #6c757d;
-            border-color: #6c757d;
-            border-radius: 20px;
-        }
-        .btn-secondary:hover {
-            background-color: #5a6268;
-            border-color: #545b62;
-        }
-        .alert-success {
-            color: #155724;
-            background-color: #d4edda;
-            border-color: #c3e6cb;
-            padding: 10px;
-            border-radius: 5px;
-            font-weight: bold;
-            text-align: center;
-        }
-        .alert-success i {
-            margin-right: 5px;
         }
     </style>
 </head>
@@ -120,7 +96,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <div class="container">
     <h1>Agregar Cliente</h1>
     <?php if(isset($_GET['success']) && $_GET['success'] == 1): ?>
-    <div class="alert alert-success" role="alert" style="margin-bottom: 20px;">
+    <div class="alert alert-success" role="alert">
         <i class="fas fa-check-circle"></i> Nuevo cliente agregado con éxito
     </div>
     <?php endif; ?>
@@ -177,9 +153,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <a href="clientes.php" class="btn btn-secondary"><i class="fas fa-times"></i> Cancelar</a>
     </form>
 </div>
-<!-- Scripts de Bootstrap -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

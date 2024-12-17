@@ -21,7 +21,7 @@ if (isset($_GET['id'])) {
 
     if ($stmt->execute()) {
         // Redirigir con mensaje de éxito
-        header("Location: clientes.php?success=1");
+        header("Location: clientes.php?success=1&action=anular");
         exit();
     } else {
         // Redirigir con mensaje de error

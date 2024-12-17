@@ -152,19 +152,19 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <?php
-                    // Conexión a la base de datos y consulta SQL
-                    include('conexion.php'); // Archivo que contiene la función conectarDB
+                <?php
+// Conexión a la base de datos y consulta SQL
+include('conexion.php'); // Archivo que contiene la función conectarDB
 
-                    $conn = conectarDB(); // Intentamos establecer la conexión a la base de datos
+$conn = conectarDB(); // Intentamos establecer la conexión a la base de datos
 
-                    if ($conn->connect_error) {
-                        die("Error en la conexión: " . $conn->connect_error);
-                    }
+if ($conn->connect_error) {
+    die("Error en la conexión: " . $conn->connect_error);
+}
 
-                    $conn->set_charset("utf8"); // Establecer la codificación UTF-8
+$conn->set_charset("utf8"); // Establecer la codificación UTF-8
 
-                    $sql = "SELECT 
+$sql = "SELECT 
             t.Idtarea, 
             t.Descripcion, 
             t.Fecha_inicio, 
@@ -173,10 +173,13 @@
             u.Nombre AS Responsable, 
             t.Estado_tarea, 
             t.Fecha_creacion, 
-            t.Creador_tarea
+            c.Nombre AS Creador
         FROM 
             tareas t
-            LEFT JOIN usuarios u ON t.Responsable = u.IDusuario
+        LEFT JOIN 
+            usuarios u ON t.Responsable = u.IDusuario
+        LEFT JOIN 
+            usuarios c ON t.Creador_tarea = c.IDusuario
         ORDER BY 
             CASE 
                 WHEN t.Estado_tarea = 'Completado' THEN 1
@@ -186,29 +189,29 @@
             END,
             t.Fecha_fin";
 
+$result = $conn->query($sql); // Ejecutamos la consulta SQL
 
-                    $result = $conn->query($sql); // Ejecutamos la consulta SQL
+if ($result->num_rows > 0) {
+    while ($row_data = $result->fetch_assoc()) {
+        echo "<tr>";
+        echo "<td>" . htmlspecialchars($row_data['Descripcion']) . "</td>";
+        echo "<td>" . $row_data['Fecha_inicio'] . "</td>";
+        echo "<td>" . $row_data['Fecha_fin'] . "</td>";
+        echo "<td>" . $row_data['Prioridad'] . "</td>";
+        echo "<td>" . $row_data['Responsable'] . "</td>";
+        echo "<td>" . $row_data['Estado_tarea'] . "</td>";
+        echo "<td>" . $row_data['Fecha_creacion'] . "</td>";
+        echo "<td>" . $row_data['Creador'] . "</td>"; // Mostrar el nombre del creador
+        echo "</tr>";
+    }
+} else {
+    echo '<tr><td colspan="8">No hay tareas registradas.</td></tr>';
+}
 
-                    if ($result->num_rows > 0) {
-                        while ($row_data = $result->fetch_assoc()) {
-                            echo "<tr>";
-                            echo "<td>" . htmlspecialchars($row_data['Descripcion']) . "</td>";
-                            echo "<td>" . $row_data['Fecha_inicio'] . "</td>";
-                            echo "<td>" . $row_data['Fecha_fin'] . "</td>";
-                            echo "<td>" . $row_data['Prioridad'] . "</td>";
-                            echo "<td>" . $row_data['Responsable'] . "</td>";
-                            echo "<td>" . $row_data['Estado_tarea'] . "</td>";
-                            echo "<td>" . $row_data['Fecha_creacion'] . "</td>";
-                            echo "<td>" . $row_data['Creador_tarea'] . "</td>";
-                            echo "</tr>";
-                        }
-                    } else {
-                        echo '<tr><td colspan="8">No hay tareas registradas.</td></tr>';
-                    }
+// Cerrar la conexión después de ejecutar la consulta
+$conn->close();
+?>
 
-                    // Cerrar la conexión después de ejecutar la consulta
-                    $conn->close();
-                    ?>
                 </tbody>
             </table>
         </div>
@@ -260,7 +263,7 @@
                     valign: 'middle'
                 },
                 columnStyles: {
-                    0: { cellWidth: 20 }, // Descripción
+                    0: { cellWidth: 30 }, // Descripción
                     1: { cellWidth: 20 }, // Inicio
                     2: { cellWidth: 20 }, // Fin
                     3: { cellWidth: 20 }, // Prioridad

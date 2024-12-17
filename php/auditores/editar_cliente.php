@@ -21,10 +21,8 @@ if ($id_cliente != '') {
 
     // Verificar si se encontraron datos del cliente
     if ($cliente_result->num_rows > 0) {
-        // Obtener los datos del cliente
         $cliente = $cliente_result->fetch_assoc();
     } else {
-        // Si no se encuentra el cliente, mostrar un mensaje de error
         echo "Cliente no encontrado";
         exit();
     }
@@ -49,11 +47,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $persona_contacto_designada = $_POST['persona_contacto_designada'];
 
     // Validar si el usuario seleccionado ya está asignado
-    $usuario_duplicado_sql = "SELECT COUNT(*) as total FROM clientes WHERE IDusuario = '$idusuario'";
+    $usuario_duplicado_sql = "SELECT COUNT(*) as total FROM clientes WHERE IDusuario = '$idusuario' AND IDcliente != '$id_cliente'";
     $usuario_duplicado_result = $conn->query($usuario_duplicado_sql);
     $usuario_duplicado = $usuario_duplicado_result->fetch_assoc();
 
-    if ($usuario_duplicado['total'] > 0 && $idusuario != $cliente['IDusuario']) {
+    if ($usuario_duplicado['total'] > 0) {
         echo "<script>alert('El usuario seleccionado ya está asignado a otro cliente. Por favor, seleccione otro usuario.');</script>";
     } else {
         $sql = "UPDATE clientes 
@@ -63,15 +61,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 WHERE IDcliente = '$id_cliente'";
 
         if ($conn->query($sql) === TRUE) {
-            // Redireccionar a la página de clientes con el parámetro de éxito
-            header("Location: clientes.php?success=1");
+            // Redirigir con un parámetro específico para edición
+            header("Location: clientes.php?action=edit&success=1");
             exit();
         } else {
-            echo "Error: " . $sql . "<br>" . $conn->error;
+            echo "Error al actualizar cliente: " . $conn->error;
         }
     }
-
-    $conn->close();
 }
 ?>
 
@@ -82,8 +78,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Cliente</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style_editar_cliente.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #a6bbd7;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
+            margin: auto;
+            margin-top: 50px;
+        }
+
+        h1 {
+            color: #000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
 <div class="container">
@@ -91,19 +122,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <form action="editar_cliente.php?id=<?php echo $id_cliente; ?>" method="POST">
         <div class="form-group">
             <label for="nombre">Nombre</label>
-            <input type="text" class="form-control" id="nombre" name="nombre" value="<?php echo $cliente['Nombre']; ?>" required>
+            <input type="text" class="form-control" id="nombre" name="nombre" value="<?php echo htmlspecialchars($cliente['Nombre']); ?>" required>
         </div>
         <div class="form-group">
             <label for="direccion">Dirección</label>
-            <input type="text" class="form-control" id="direccion" name="direccion" value="<?php echo $cliente['Direccion']; ?>" required>
+            <input type="text" class="form-control" id="direccion" name="direccion" value="<?php echo htmlspecialchars($cliente['Direccion']); ?>" required>
         </div>
         <div class="form-group">
             <label for="telefono">Teléfono</label>
-            <input type="text" class="form-control" id="telefono" name="telefono" value="<?php echo $cliente['Telefono']; ?>" required>
+            <input type="text" class="form-control" id="telefono" name="telefono" value="<?php echo htmlspecialchars($cliente['Telefono']); ?>" required>
         </div>
         <div class="form-group">
             <label for="email">Email</label>
-            <input type="email" class="form-control" id="email" name="email" value="<?php echo $cliente['Email']; ?>" required>
+            <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($cliente['Email']); ?>" required>
         </div>
         <div class="form-group">
             <label for="idciudad">Ciudad</label>
@@ -137,16 +168,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
         <div class="form-group">
             <label for="persona_contacto_designada">Persona de Contacto Designada</label>
-            <input type="text" class="form-control" id="persona_contacto_designada" name="persona_contacto_designada" value="<?php echo $cliente['Persona_contacto_designada']; ?>" required>
+            <input type="text" class="form-control" id="persona_contacto_designada" name="persona_contacto_designada" value="<?php echo htmlspecialchars($cliente['Persona_contacto_designada']); ?>" required>
         </div>
-        <button type="submit" class="btn btn-primary"><i class="fas fa-user-edit"></i> Guardar Cambios</button>
-        <a href="clientes.php" class="btn btn-secondary"><i class="fas fa-times"></i> Cancelar</a>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar Cambios</button>
+        <a href="clientes.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Cancelar</a>
     </form>
 </div>
-<!-- Scripts de Bootstrap -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
-

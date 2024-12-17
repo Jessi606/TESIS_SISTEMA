@@ -88,7 +88,7 @@ $query = mysqli_query($con, $sql);
                     <tr>
                         <th>Código</th>
                         <th>Nombre</th>
-                        <th>Contraseña</th>
+                        
                         <th>Roles</th>
                         <th>Estado</th>
                         <th>Acciones</th>
@@ -99,7 +99,7 @@ $query = mysqli_query($con, $sql);
                         <tr class="<?= $row['Estado'] ? '' : 'usuario-inactivo' ?>">
                             <td><?= $row['IDusuario'] ?></td>
                             <td><?= $row['Nombre'] ?></td>
-                            <td><?= $row['Password'] ?></td>
+                            
                             <td><?= $row['Rol'] ?></td>
                             <td><?= $row['Estado'] ? 'Activo' : 'Inactivo' ?></td>
                             <td>

@@ -273,7 +273,7 @@
                     valign: 'middle'
                 },
                 columnStyles: {
-                    0: { cellWidth: 20 }, // Descripción
+                    0: { cellWidth: 35 }, // Descripción
                     1: { cellWidth: 20 }, // Inicio
                     2: { cellWidth: 20 }, // Fin
                     3: { cellWidth: 20 }, // Prioridad

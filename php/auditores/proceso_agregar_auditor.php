@@ -32,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt_verificar->execute();
         $stmt_verificar->store_result();
         if ($stmt_verificar->num_rows > 0) {
-            $errorMessage = "Error al agregar el auditor: El usuario ya ha sido asignado como auditor.";
+            $errorMessage = "Error al agregar el auditor: El usuario ya ha sido asignado a otro auditor, por favor seleccione otro usuario disponible";
         } else {
             // Preparar la consulta SQL para insertar el auditor en la base de datos
             $sql = "INSERT INTO auditores (Nombre, Apellido, Telefono, Email, FechaNacimiento, NivelExperiencia, IDusuario) 
